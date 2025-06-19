@@ -9,7 +9,143 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      content: {
+        Row: {
+          content_type: string
+          created_at: string
+          file_url: string | null
+          id: string
+          metadata: Json | null
+          original_content: string
+          source_type: string
+          source_url: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          word_count: number | null
+        }
+        Insert: {
+          content_type: string
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          metadata?: Json | null
+          original_content: string
+          source_type: string
+          source_url?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+          word_count?: number | null
+        }
+        Update: {
+          content_type?: string
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          metadata?: Json | null
+          original_content?: string
+          source_type?: string
+          source_url?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          word_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      repurposed_content: {
+        Row: {
+          content_text: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          original_content_id: string
+          platform: string
+          published_at: string | null
+          scheduled_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content_text: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          original_content_id: string
+          platform: string
+          published_at?: string | null
+          scheduled_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content_text?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          original_content_id?: string
+          platform?: string
+          published_at?: string | null
+          scheduled_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "repurposed_content_original_content_id_fkey"
+            columns: ["original_content_id"]
+            isOneToOne: false
+            referencedRelation: "content"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "repurposed_content_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

@@ -6,12 +6,15 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sparkles, ArrowLeft, Check } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { signUp } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,13 +26,13 @@ const Signup = () => {
       return;
     }
     
-    // TODO: Implement Supabase authentication in Phase 1.2
-    console.log("Signup attempt:", { email, password });
-    
-    setTimeout(() => {
+    try {
+      await signUp(email, password, fullName);
+    } catch (error) {
+      console.error('Signup error:', error);
+    } finally {
       setIsLoading(false);
-      // Redirect to dashboard after successful signup
-    }, 1000);
+    }
   };
 
   return (
@@ -57,6 +60,17 @@ const Signup = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input
+                  id="fullName"
+                  type="text"
+                  placeholder="Enter your full name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input

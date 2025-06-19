@@ -3,8 +3,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Plus, FileText, Zap, Calendar, BarChart3, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 const Dashboard = () => {
+  const { signOut, user } = useAuth();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Top Navigation */}
@@ -19,11 +30,12 @@ const Dashboard = () => {
             </span>
           </div>
           <div className="flex items-center space-x-4">
+            <span className="text-sm text-gray-600">Welcome, {user?.email}</span>
             <Button variant="outline" size="sm">
               <Settings className="w-4 h-4 mr-2" />
               Settings
             </Button>
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" onClick={handleSignOut}>
               Sign Out
             </Button>
           </div>
@@ -42,25 +54,25 @@ const Dashboard = () => {
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Content Pieces</CardDescription>
-              <CardTitle className="text-2xl">12</CardTitle>
+              <CardTitle className="text-2xl">0</CardTitle>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Repurposed This Month</CardDescription>
-              <CardTitle className="text-2xl">24</CardTitle>
+              <CardTitle className="text-2xl">0</CardTitle>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Scheduled Posts</CardDescription>
-              <CardTitle className="text-2xl">8</CardTitle>
+              <CardTitle className="text-2xl">0</CardTitle>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Total Engagement</CardDescription>
-              <CardTitle className="text-2xl">1.2K</CardTitle>
+              <CardTitle className="text-2xl">0</CardTitle>
             </CardHeader>
           </Card>
         </div>
@@ -98,11 +110,9 @@ const Dashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full" asChild>
-                <Link to="/repurpose">
-                  <Zap className="w-4 h-4 mr-2" />
-                  Start Repurposing
-                </Link>
+              <Button className="w-full" disabled>
+                <Zap className="w-4 h-4 mr-2" />
+                Coming Soon
               </Button>
             </CardContent>
           </Card>
@@ -118,11 +128,9 @@ const Dashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full" asChild>
-                <Link to="/schedule">
-                  <Calendar className="w-4 h-4 mr-2" />
-                  View Calendar
-                </Link>
+              <Button className="w-full" disabled>
+                <Calendar className="w-4 h-4 mr-2" />
+                Coming Soon
               </Button>
             </CardContent>
           </Card>
@@ -135,28 +143,9 @@ const Dashboard = () => {
             <CardDescription>Your latest content repurposing activity</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <h4 className="font-medium">Blog post repurposed to Twitter thread</h4>
-                  <p className="text-sm text-gray-600">2 hours ago</p>
-                </div>
-                <Button variant="outline" size="sm">View</Button>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <h4 className="font-medium">LinkedIn post scheduled for tomorrow</h4>
-                  <p className="text-sm text-gray-600">4 hours ago</p>
-                </div>
-                <Button variant="outline" size="sm">View</Button>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <h4 className="font-medium">Video script generated from article</h4>
-                  <p className="text-sm text-gray-600">1 day ago</p>
-                </div>
-                <Button variant="outline" size="sm">View</Button>
-              </div>
+            <div className="text-center py-8 text-gray-500">
+              <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <p>No content uploaded yet. Start by uploading your first piece of content!</p>
             </div>
           </CardContent>
         </Card>

@@ -6,23 +6,25 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sparkles, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { signIn } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // TODO: Implement Supabase authentication in Phase 1.2
-    console.log("Login attempt:", { email, password });
-    
-    setTimeout(() => {
+    try {
+      await signIn(email, password);
+    } catch (error) {
+      console.error('Login error:', error);
+    } finally {
       setIsLoading(false);
-      // Redirect to dashboard after successful login
-    }, 1000);
+    }
   };
 
   return (
