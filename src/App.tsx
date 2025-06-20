@@ -11,6 +11,7 @@ import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import Dashboard from "./pages/Dashboard";
 import ContentUpload from "./pages/ContentUpload";
+import ContentRepurpose from "./pages/ContentRepurpose";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,11 @@ const App = () => (
             <Route path="/dashboard/content" element={
               <ProtectedRoute>
                 <ContentUpload />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard/repurpose" element={
+              <ProtectedRoute>
+                <ContentRepurpose />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

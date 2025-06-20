@@ -110,9 +110,11 @@ const Dashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full" disabled>
-                <Zap className="w-4 h-4 mr-2" />
-                Coming Soon
+              <Button className="w-full" asChild>
+                <Link to="/dashboard/repurpose">
+                  <Zap className="w-4 h-4 mr-2" />
+                  Start Repurposing
+                </Link>
               </Button>
             </CardContent>
           </Card>
