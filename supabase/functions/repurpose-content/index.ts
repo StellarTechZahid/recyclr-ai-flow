@@ -1,6 +1,6 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -50,29 +50,73 @@ serve(async (req) => {
       )
     }
 
-    // For now, we'll create a mock response since OpenAI key isn't set up yet
+    // TODO: Update this with your real OpenAI API key
+    const openAIApiKey = "YOUR_OPENAI_API_KEY_HERE"; // Replace with actual key
+    
     const platformPrompt = PLATFORM_PROMPTS[platform as keyof typeof PLATFORM_PROMPTS] || PLATFORM_PROMPTS.twitter;
     const toneModifier = TONE_MODIFIERS[tone as keyof typeof TONE_MODIFIERS] || TONE_MODIFIERS.professional;
 
-    // Mock AI response - in real implementation, this would call OpenAI
-    const mockResponse = generateMockResponse(content, platform, tone);
+    const systemPrompt = `You are an expert content creator who specializes in repurposing content for different social media platforms. ${platformPrompt} ${toneModifier}`;
 
-    const suggestions = [
-      "Add more engaging hooks to grab attention",
-      "Include relevant hashtags for better discoverability",
-      "Consider adding a call-to-action to increase engagement",
-      "Break up long paragraphs for better readability"
-    ];
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: `Please repurpose this ${contentType} content for ${platform}: ${content}` }
+          ],
+          max_tokens: 1000,
+          temperature: 0.7,
+        }),
+      });
 
-    return new Response(
-      JSON.stringify({
-        repurposedContent: mockResponse,
-        suggestions: suggestions.slice(0, 2) // Return 2 random suggestions
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      if (!response.ok) {
+        console.error('OpenAI API error:', response.status, response.statusText);
+        throw new Error(`OpenAI API error: ${response.status}`);
       }
-    )
+
+      const data = await response.json();
+      const repurposedContent = data.choices[0]?.message?.content || '';
+
+      // Generate AI suggestions based on the platform
+      const suggestions = generateSuggestions(platform, tone);
+
+      return new Response(
+        JSON.stringify({
+          repurposedContent,
+          suggestions
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+
+    } catch (openAIError) {
+      console.error('OpenAI request failed:', openAIError);
+      
+      // Fallback to mock response if OpenAI fails (for development)
+      const mockResponse = generateMockResponse(content, platform, tone);
+      const suggestions = [
+        "Note: Using mock response - please add your OpenAI API key",
+        "Add more engaging hooks to grab attention"
+      ];
+
+      return new Response(
+        JSON.stringify({
+          repurposedContent: mockResponse,
+          suggestions
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
 
   } catch (error) {
     console.error('Error in repurpose-content function:', error)
@@ -85,6 +129,27 @@ serve(async (req) => {
     )
   }
 })
+
+function generateSuggestions(platform: string, tone: string): string[] {
+  const baseSuggestions = [
+    "Add more engaging hooks to grab attention",
+    "Include relevant hashtags for better discoverability",
+    "Consider adding a call-to-action to increase engagement",
+    "Break up long paragraphs for better readability"
+  ];
+
+  const platformSuggestions: Record<string, string[]> = {
+    twitter: ["Keep tweets under 280 characters", "Use thread format for longer content"],
+    linkedin: ["Add industry-specific keywords", "Include professional insights"],
+    instagram: ["Use relevant emojis", "Add visual storytelling elements"],
+    facebook: ["Ask questions to encourage comments", "Use conversational language"],
+    youtube: ["Include timestamps", "Add SEO keywords in description"],
+    blog: ["Use clear headings and subheadings", "Add internal links"]
+  };
+
+  const platformSpecific = platformSuggestions[platform] || [];
+  return [...platformSpecific, ...baseSuggestions.slice(0, 2)];
+}
 
 function generateMockResponse(content: string, platform: string, tone: string): string {
   const contentSnippet = content.substring(0, 200);
