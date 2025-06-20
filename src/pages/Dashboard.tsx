@@ -122,7 +122,27 @@ const Dashboard = () => {
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardHeader>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                <Calendar className="w-6 h-6 text-green-600" />
+                <BarChart3 className="w-6 h-6 text-green-600" />
+              </div>
+              <CardTitle>Analytics</CardTitle>
+              <CardDescription>
+                Track performance and get insights on your repurposed content
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button className="w-full" asChild>
+                <Link to="/dashboard/analytics">
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  View Analytics
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <CardHeader>
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                <Calendar className="w-6 h-6 text-orange-600" />
               </div>
               <CardTitle>Schedule Posts</CardTitle>
               <CardDescription>
