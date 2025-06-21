@@ -50,39 +50,41 @@ serve(async (req) => {
       )
     }
 
-    // TODO: Update this with your real OpenAI API key
-    const openAIApiKey = "YOUR_OPENAI_API_KEY_HERE"; // Replace with actual key
+    // TODO: Replace with actual Hugging Face Access Token
+    const huggingFaceToken = "DUMMY_TOKEN_REPLACE_TOMORROW"; // REMEMBER: Update this with real token!
     
     const platformPrompt = PLATFORM_PROMPTS[platform as keyof typeof PLATFORM_PROMPTS] || PLATFORM_PROMPTS.twitter;
     const toneModifier = TONE_MODIFIERS[tone as keyof typeof TONE_MODIFIERS] || TONE_MODIFIERS.professional;
 
     const systemPrompt = `You are an expert content creator who specializes in repurposing content for different social media platforms. ${platformPrompt} ${toneModifier}`;
+    const userPrompt = `Please repurpose this ${contentType} content for ${platform}: ${content}`;
 
     try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      // Using Hugging Face Inference API with a text generation model
+      const response = await fetch('https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${openAIApiKey}`,
+          'Authorization': `Bearer ${huggingFaceToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: `Please repurpose this ${contentType} content for ${platform}: ${content}` }
-          ],
-          max_tokens: 1000,
-          temperature: 0.7,
+          inputs: `${systemPrompt}\n\nUser: ${userPrompt}\nAssistant:`,
+          parameters: {
+            max_new_tokens: 500,
+            temperature: 0.7,
+            do_sample: true,
+            return_full_text: false
+          }
         }),
       });
 
       if (!response.ok) {
-        console.error('OpenAI API error:', response.status, response.statusText);
-        throw new Error(`OpenAI API error: ${response.status}`);
+        console.error('Hugging Face API error:', response.status, response.statusText);
+        throw new Error(`Hugging Face API error: ${response.status}`);
       }
 
       const data = await response.json();
-      const repurposedContent = data.choices[0]?.message?.content || '';
+      const repurposedContent = data[0]?.generated_text || '';
 
       // Generate AI suggestions based on the platform
       const suggestions = generateSuggestions(platform, tone);
@@ -97,13 +99,13 @@ serve(async (req) => {
         }
       )
 
-    } catch (openAIError) {
-      console.error('OpenAI request failed:', openAIError);
+    } catch (huggingFaceError) {
+      console.error('Hugging Face request failed:', huggingFaceError);
       
-      // Fallback to mock response if OpenAI fails (for development)
+      // Fallback to mock response if Hugging Face fails (for development)
       const mockResponse = generateMockResponse(content, platform, tone);
       const suggestions = [
-        "Note: Using mock response - please add your OpenAI API key",
+        "Note: Using mock response - please add your Hugging Face Access Token",
         "Add more engaging hooks to grab attention"
       ];
 
