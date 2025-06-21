@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +12,8 @@ import Signup from "./pages/auth/Signup";
 import Dashboard from "./pages/Dashboard";
 import ContentUpload from "./pages/ContentUpload";
 import ContentRepurpose from "./pages/ContentRepurpose";
+import BulkContentManager from "./pages/BulkContentManager";
+import ContentTemplates from "./pages/ContentTemplates";
 import ContentScheduling from "./pages/ContentScheduling";
 import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
@@ -41,6 +44,16 @@ const App = () => (
             <Route path="/dashboard/repurpose" element={
               <ProtectedRoute>
                 <ContentRepurpose />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard/bulk" element={
+              <ProtectedRoute>
+                <BulkContentManager />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard/templates" element={
+              <ProtectedRoute>
+                <ContentTemplates />
               </ProtectedRoute>
             } />
             <Route path="/dashboard/scheduling" element={

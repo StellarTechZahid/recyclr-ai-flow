@@ -14,17 +14,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { platforms } from "@/services/aiService";
+import type { Tables } from "@/integrations/supabase/types";
 
-interface ScheduledPost {
-  id: string;
-  title: string;
-  content: string;
-  platform: string;
-  scheduled_date: string;
-  scheduled_time: string;
-  status: 'scheduled' | 'published' | 'failed';
-  created_at: string;
-}
+type ScheduledPost = Tables<'scheduled_posts'>;
 
 const ContentScheduling = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -284,7 +276,7 @@ const ContentScheduling = () => {
                                     <Badge className={getPlatformColor(post.platform)}>
                                       {platforms.find(p => p.id === post.platform)?.name || post.platform}
                                     </Badge>
-                                    <Badge className={getStatusColor(post.status)}>
+                                    <Badge className={getStatusColor(post.status || 'scheduled')}>
                                       {post.status}
                                     </Badge>
                                     <span className="text-sm text-gray-500">{post.scheduled_time}</span>
@@ -339,7 +331,7 @@ const ContentScheduling = () => {
                               <Badge className={getPlatformColor(post.platform)}>
                                 {platforms.find(p => p.id === post.platform)?.name || post.platform}
                               </Badge>
-                              <Badge className={getStatusColor(post.status)}>
+                              <Badge className={getStatusColor(post.status || 'scheduled')}>
                                 {post.status}
                               </Badge>
                               <span className="text-sm text-gray-500">

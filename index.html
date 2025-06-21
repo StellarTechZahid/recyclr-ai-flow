@@ -4,18 +4,31 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RecyclrAI - Transform Your Content Into Viral Gold</title>
+    <title>Recyclr AI - Transform Your Content Into Viral Gold</title>
     <meta name="description" content="AI-powered content repurposing SaaS platform. Transform blogs, tweets, and videos into engaging content across all platforms." />
-    <meta name="author" content="RecyclrAI" />
+    <meta name="author" content="Recyclr AI" />
 
-    <meta property="og:title" content="RecyclrAI - AI-Powered Content Repurposing" />
-    <meta property="og:description" content="Transform your existing content into viral posts across all platforms with AI" />
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#3b82f6" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Recyclr AI" />
+    <link rel="apple-touch-icon" href="/pwa-192x192.png" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://recyclrai.com/" />
+    <meta property="og:title" content="Recyclr AI - AI-Powered Content Repurposing" />
+    <meta property="og:description" content="Transform your existing content into viral posts across all platforms with AI" />
     <meta property="og:image" content="https://recyclrai.com/og-image.png" />
 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@RecyclrAI" />
-    <meta name="twitter:image" content="https://recyclrai.com/og-image.png" />
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://recyclrai.com/" />
+    <meta property="twitter:title" content="Recyclr AI - AI-Powered Content Repurposing" />
+    <meta property="twitter:description" content="Transform your existing content into viral posts across all platforms with AI" />
+    <meta property="twitter:image" content="https://recyclrai.com/og-image.png" />
     
     <!-- Preconnect to external domains for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -28,5 +41,137 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- PWA Install Prompt and Service Worker Registration -->
+    <script>
+      // Register service worker
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('SW registered: ', registration);
+            })
+            .catch((registrationError) => {
+              console.log('SW registration failed: ', registrationError);
+            });
+        });
+      }
+
+      // PWA Install Prompt
+      let deferredPrompt;
+      let installButton;
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        console.log('beforeinstallprompt event fired');
+        e.preventDefault();
+        deferredPrompt = e;
+        
+        // Show install button
+        showInstallPrompt();
+      });
+
+      function showInstallPrompt() {
+        if (installButton) return; // Already showing
+
+        installButton = document.createElement('div');
+        installButton.id = 'pwa-install-prompt';
+        installButton.innerHTML = `
+          <div style="
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #3b82f6;
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            cursor: pointer;
+            font-family: Inter, sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 1000;
+            max-width: 300px;
+            animation: slideIn 0.3s ease-out;
+          ">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7,10 12,15 17,10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              <div>
+                <div style="font-weight: 600;">Install Recyclr AI</div>
+                <div style="font-size: 12px; opacity: 0.9;">Get quick access to your content tools</div>
+              </div>
+              <button onclick="dismissInstallPrompt()" style="
+                background: rgba(255,255,255,0.2);
+                border: none;
+                color: white;
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                cursor: pointer;
+                font-size: 12px;
+                margin-left: auto;
+              ">×</button>
+            </div>
+          </div>
+          <style>
+            @keyframes slideIn {
+              from { transform: translateY(100px); opacity: 0; }
+              to { transform: translateY(0); opacity: 1; }
+            }
+          </style>
+        `;
+
+        installButton.addEventListener('click', installPWA);
+        document.body.appendChild(installButton);
+
+        // Auto-hide after 10 seconds
+        setTimeout(() => {
+          if (installButton && installButton.parentNode) {
+            dismissInstallPrompt();
+          }
+        }, 10000);
+      }
+
+      function installPWA() {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          deferredPrompt.userChoice.then((choiceResult) => {
+            console.log('User choice:', choiceResult.outcome);
+            deferredPrompt = null;
+            dismissInstallPrompt();
+          });
+        }
+      }
+
+      function dismissInstallPrompt() {
+        if (installButton && installButton.parentNode) {
+          installButton.style.animation = 'slideOut 0.3s ease-in forwards';
+          setTimeout(() => {
+            if (installButton && installButton.parentNode) {
+              installButton.parentNode.removeChild(installButton);
+              installButton = null;
+            }
+          }, 300);
+        }
+      }
+
+      // Add slideOut animation
+      const style = document.createElement('style');
+      style.textContent = `
+        @keyframes slideOut {
+          from { transform: translateY(0); opacity: 1; }
+          to { transform: translateY(100px); opacity: 0; }
+        }
+      `;
+      document.head.appendChild(style);
+
+      window.addEventListener('appinstalled', (evt) => {
+        console.log('App was installed');
+        dismissInstallPrompt();
+      });
+    </script>
   </body>
 </html>
