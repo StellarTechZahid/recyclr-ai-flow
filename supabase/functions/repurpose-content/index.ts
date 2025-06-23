@@ -50,116 +50,114 @@ serve(async (req) => {
       )
     }
 
-    const huggingFaceToken = "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";
+    const huggingFaceToken = Deno.env.get('HUGGING_FACE_ACCESS_TOKEN');
     
+    if (!huggingFaceToken) {
+      return new Response(
+        JSON.stringify({ error: 'Hugging Face API token not configured' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
     const platformPrompt = PLATFORM_PROMPTS[platform as keyof typeof PLATFORM_PROMPTS] || PLATFORM_PROMPTS.twitter;
     const toneModifier = TONE_MODIFIERS[tone as keyof typeof TONE_MODIFIERS] || TONE_MODIFIERS.professional;
 
-    const systemPrompt = `You are an expert content creator who specializes in repurposing content for different social media platforms. ${platformPrompt} ${toneModifier}`;
-    const userPrompt = `Please repurpose this ${contentType} content for ${platform}: ${content}`;
+    const prompt = `${platformPrompt} ${toneModifier}
 
-    try {
-      // Using Hugging Face Inference API with a better text generation model
-      const response = await fetch('https://api-inference.huggingface.co/models/microsoft/DialoGPT-large', {
+Original ${contentType} content:
+${content}
+
+Please repurpose this content for ${platform}:`;
+
+    console.log('Making request to Hugging Face API...');
+
+    // Use a more reliable text generation model
+    const response = await fetch('https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${huggingFaceToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        inputs: prompt,
+        parameters: {
+          max_new_tokens: 500,
+          temperature: 0.7,
+          do_sample: true,
+          return_full_text: false,
+          repetition_penalty: 1.1
+        }
+      }),
+    });
+
+    console.log('Hugging Face response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Hugging Face API error:', response.status, errorText);
+      
+      // Try alternative model if first fails
+      const fallbackResponse = await fetch('https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${huggingFaceToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          inputs: `${systemPrompt}\n\nUser: ${userPrompt}\nAssistant:`,
+          inputs: prompt,
           parameters: {
-            max_new_tokens: 800,
-            temperature: 0.7,
-            do_sample: true,
-            return_full_text: false,
-            repetition_penalty: 1.1
+            max_new_tokens: 400,
+            temperature: 0.8,
+            do_sample: true
           }
         }),
       });
 
-      if (!response.ok) {
-        console.error('Hugging Face API error:', response.status, response.statusText);
-        
-        // Try alternative model if the first one fails
-        const fallbackResponse = await fetch('https://api-inference.huggingface.co/models/gpt2', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${huggingFaceToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            inputs: `${systemPrompt}\n\n${userPrompt}`,
-            parameters: {
-              max_new_tokens: 500,
-              temperature: 0.8,
-              do_sample: true,
-              return_full_text: false
-            }
+      if (fallbackResponse.ok) {
+        const fallbackData = await fallbackResponse.json();
+        const repurposedContent = fallbackData[0]?.generated_text || content;
+        const suggestions = generateSuggestions(platform, tone);
+
+        return new Response(
+          JSON.stringify({
+            repurposedContent: cleanupGeneratedText(repurposedContent),
+            suggestions
           }),
-        });
-
-        if (fallbackResponse.ok) {
-          const fallbackData = await fallbackResponse.json();
-          const repurposedContent = fallbackData[0]?.generated_text || generateMockResponse(content, platform, tone);
-          const suggestions = generateSuggestions(platform, tone);
-
-          return new Response(
-            JSON.stringify({
-              repurposedContent,
-              suggestions
-            }),
-            { 
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-            }
-          )
-        }
-        
-        throw new Error(`Hugging Face API error: ${response.status}`);
+          { 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        )
       }
-
-      const data = await response.json();
-      const repurposedContent = data[0]?.generated_text || generateMockResponse(content, platform, tone);
-
-      // Generate AI suggestions based on the platform
-      const suggestions = generateSuggestions(platform, tone);
-
-      return new Response(
-        JSON.stringify({
-          repurposedContent,
-          suggestions
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-
-    } catch (huggingFaceError) {
-      console.error('Hugging Face request failed:', huggingFaceError);
       
-      // Fallback to mock response if Hugging Face fails
-      const mockResponse = generateMockResponse(content, platform, tone);
-      const suggestions = [
-        "AI service temporarily unavailable - showing enhanced mock response",
-        "Add more engaging hooks to grab attention",
-        "Consider A/B testing different versions"
-      ];
-
-      return new Response(
-        JSON.stringify({
-          repurposedContent: mockResponse,
-          suggestions
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+      throw new Error(`Hugging Face API error: ${response.status}`);
     }
+
+    const data = await response.json();
+    console.log('Hugging Face response data:', data);
+
+    const repurposedContent = data[0]?.generated_text || content;
+    const suggestions = generateSuggestions(platform, tone);
+
+    return new Response(
+      JSON.stringify({
+        repurposedContent: cleanupGeneratedText(repurposedContent),
+        suggestions
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
 
   } catch (error) {
     console.error('Error in repurpose-content function:', error)
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ 
+        error: 'Failed to repurpose content. Please try again.',
+        details: error.message 
+      }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -167,6 +165,14 @@ serve(async (req) => {
     )
   }
 })
+
+function cleanupGeneratedText(text: string): string {
+  // Remove any unwanted prefixes or suffixes from the generated text
+  return text
+    .replace(/^(Assistant:|AI:|Bot:)/i, '')
+    .replace(/^Response:/i, '')
+    .trim();
+}
 
 function generateSuggestions(platform: string, tone: string): string[] {
   const baseSuggestions = [
@@ -187,32 +193,4 @@ function generateSuggestions(platform: string, tone: string): string[] {
 
   const platformSpecific = platformSuggestions[platform] || [];
   return [...platformSpecific, ...baseSuggestions.slice(0, 2)];
-}
-
-function generateMockResponse(content: string, platform: string, tone: string): string {
-  const contentSnippet = content.substring(0, 300);
-  const currentDate = new Date().toLocaleDateString();
-  
-  switch (platform) {
-    case 'twitter':
-      return `🧵 THREAD: ${contentSnippet.substring(0, 80)}...\n\n1/ Let me break this down for you:\n\n${contentSnippet.substring(80, 160)}...\n\n2/ Here's what this means:\n\n${contentSnippet.substring(160, 240)}...\n\n3/ Key takeaway: ${contentSnippet.substring(240, 280)}...\n\nWhat are your thoughts? 🤔\n\n#ContentStrategy #AI #Productivity #RecyclrAI`;
-    
-    case 'linkedin':
-      return `🚀 ${tone === 'professional' ? 'Professional Insights' : 'Thoughts'} on ${content.split(' ').slice(0, 4).join(' ')}\n\n${contentSnippet}...\n\n💡 Key takeaways:\n✅ Strategic insight #1\n✅ Actionable point #2  \n✅ Future consideration #3\n\nWhat's your experience with this? I'd love to hear your thoughts in the comments! 👇\n\n#LinkedIn #Professional #Growth #Industry #Leadership`;
-    
-    case 'instagram':
-      return `✨ ${contentSnippet.substring(0, 120)}... ✨\n\n${tone === 'inspirational' ? '🌟 Remember: Every small step counts! 🌟' : '💭 Here\'s what I learned:'}\n\n${contentSnippet.substring(120, 200)}...\n\nSwipe to see more insights! 👉\nDouble tap if this resonates! 💕\nSave for later! 📌\n\n#InstaDaily #Content #Inspiration #Motivation #Growth #Mindset #Success`;
-    
-    case 'facebook':
-      return `Hey everyone! 👋\n\n${tone === 'casual' ? 'So I was thinking about this...' : 'I wanted to share something important:'}\n\n${contentSnippet}...\n\n🤔 I'd love to hear your thoughts on this! What's been your experience?\n\n👇 Drop a comment below and let's discuss! I always love hearing different perspectives.\n\n#Community #Discussion #Thoughts`;
-    
-    case 'youtube':
-      return `🎥 ${content.split(' ').slice(0, 6).join(' ')} | Complete Guide ${currentDate}\n\n${contentSnippet}...\n\n🎯 TIMESTAMPS:\n00:00 Introduction & Overview\n02:30 Main Topic Deep Dive\n05:15 Key Insights & Analysis  \n07:45 Practical Applications\n10:00 Common Mistakes to Avoid\n12:30 Conclusion & Next Steps\n\n📚 RESOURCES MENTIONED:\n• Link 1: [Description]\n• Link 2: [Description]\n\n👍 Like this video if it helped!\n🔔 Subscribe for more content!\n💬 Comment your thoughts below!\n🔗 Share with someone who needs this!\n\n#YouTube #Tutorial #Guide #Education`;
-    
-    case 'blog':
-      return `# ${content.split(' ').slice(0, 8).join(' ')}: A Comprehensive Guide\n\n## Introduction\n\n${contentSnippet.substring(0, 150)}...\n\n## Understanding the Fundamentals\n\n${contentSnippet.substring(150, 250)}...\n\n### Key Point 1: Strategic Approach\n\nDetailed explanation and analysis...\n\n### Key Point 2: Implementation\n\nPractical steps and considerations...\n\n### Key Point 3: Best Practices\n\nExpert recommendations and tips...\n\n## Real-World Applications\n\n${contentSnippet.substring(250, 300)}...\n\n## Conclusion\n\nWrapping up the key insights and actionable takeaways...\n\n---\n\n*What did you think of this post? Share your thoughts and experiences in the comments below!*\n\n**Tags:** #Blog #Content #Strategy #Guide`;
-    
-    default:
-      return `${contentSnippet}...\n\n✨ Optimized for ${platform} with ${tone} tone\n📅 Generated on ${currentDate}\n🤖 Powered by RecyclrAI\n\nReady to engage your audience!`;
-  }
 }

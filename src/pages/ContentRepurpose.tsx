@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -69,6 +68,7 @@ const ContentRepurpose = () => {
 
     setIsLoading(true);
     try {
+      console.log('Starting repurpose request...');
       const result = await repurposeContent({
         content: selectedContent.original_content,
         platform: selectedPlatform,
@@ -76,6 +76,7 @@ const ContentRepurpose = () => {
         tone: selectedTone,
       });
 
+      console.log('Repurpose result:', result);
       setRepurposedContent(result.repurposedContent);
       setSuggestions(result.suggestions || []);
       
@@ -121,6 +122,59 @@ const ContentRepurpose = () => {
       toast.success('Copied to clipboard!');
     } catch (error) {
       toast.error('Failed to copy to clipboard');
+    }
+  };
+
+  const downloadContent = () => {
+    if (!repurposedContent) {
+      toast.error('No content to download');
+      return;
+    }
+
+    const selectedPlatformInfo = platforms.find(p => p.id === selectedPlatform);
+    const filename = `${selectedContent?.title || 'content'}-${selectedPlatformInfo?.name || selectedPlatform}.txt`;
+    
+    const element = document.createElement('a');
+    const file = new Blob([repurposedContent], { type: 'text/plain' });
+    element.href = URL.createObjectURL(file);
+    element.download = filename;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    
+    toast.success('Content downloaded successfully!');
+  };
+
+  const shareContent = async () => {
+    if (!repurposedContent) {
+      toast.error('No content to share');
+      return;
+    }
+
+    const selectedPlatformInfo = platforms.find(p => p.id === selectedPlatform);
+    const shareData = {
+      title: `Repurposed content for ${selectedPlatformInfo?.name || selectedPlatform}`,
+      text: repurposedContent,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        toast.success('Content shared successfully!');
+      } else {
+        // Fallback: copy to clipboard
+        await navigator.clipboard.writeText(repurposedContent);
+        toast.success('Content copied to clipboard for sharing!');
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+      // Fallback: copy to clipboard
+      try {
+        await navigator.clipboard.writeText(repurposedContent);
+        toast.success('Content copied to clipboard!');
+      } catch (clipboardError) {
+        toast.error('Failed to share content');
+      }
     }
   };
 
@@ -280,11 +334,11 @@ const ContentRepurpose = () => {
                         <Copy className="w-4 h-4 mr-2" />
                         Copy
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" onClick={downloadContent}>
                         <Download className="w-4 h-4 mr-2" />
                         Download
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" onClick={shareContent}>
                         <Share className="w-4 h-4 mr-2" />
                         Share
                       </Button>
