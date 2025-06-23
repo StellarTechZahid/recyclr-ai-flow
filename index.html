@@ -3,17 +3,27 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Recyclr AI - Transform Your Content Into Viral Gold</title>
     <meta name="description" content="AI-powered content repurposing SaaS platform. Transform blogs, tweets, and videos into engaging content across all platforms." />
     <meta name="author" content="Recyclr AI" />
+    <meta name="keywords" content="AI, content repurposing, social media, content creation, marketing automation" />
 
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#3b82f6" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Recyclr AI" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="application-name" content="Recyclr AI" />
+    <meta name="msapplication-TileColor" content="#3b82f6" />
+    <meta name="msapplication-TileImage" content="/pwa-192x192.png" />
+    
+    <!-- PWA Icons -->
+    <link rel="icon" href="/pwa-192x192.png" type="image/png">
     <link rel="apple-touch-icon" href="/pwa-192x192.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/pwa-192x192.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/pwa-512x512.png" />
     <link rel="manifest" href="/manifest.json" />
 
     <!-- Open Graph / Facebook -->
@@ -33,16 +43,21 @@
     <!-- Preconnect to external domains for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://wtjgswjapvrnrckcnwer.supabase.co">
     
     <!-- Professional font for SaaS -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Splash screens for iOS -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-startup-image" href="/pwa-512x512.png">
   </head>
 
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     
-    <!-- PWA Install Prompt and Service Worker Registration -->
+    <!-- PWA Features and Service Worker Registration -->
     <script>
       // Register service worker
       if ('serviceWorker' in navigator) {
@@ -50,6 +65,17 @@
           navigator.serviceWorker.register('/sw.js')
             .then((registration) => {
               console.log('SW registered: ', registration);
+              
+              // Check for updates
+              registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                newWorker.addEventListener('statechange', () => {
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    // New content available, show update notification
+                    showUpdateNotification();
+                  }
+                });
+              });
             })
             .catch((registrationError) => {
               console.log('SW registration failed: ', registrationError);
@@ -57,21 +83,25 @@
         });
       }
 
-      // PWA Install Prompt
+      // PWA Install Prompt with Enhanced UX
       let deferredPrompt;
       let installButton;
+      let installPromptShown = localStorage.getItem('installPromptShown');
+      let installDismissed = localStorage.getItem('installDismissed');
 
       window.addEventListener('beforeinstallprompt', (e) => {
         console.log('beforeinstallprompt event fired');
         e.preventDefault();
         deferredPrompt = e;
         
-        // Show install button
-        showInstallPrompt();
+        // Show install prompt if not previously dismissed
+        if (!installDismissed || Date.now() - parseInt(installDismissed) > 7 * 24 * 60 * 60 * 1000) {
+          setTimeout(() => showInstallPrompt(), 3000); // Show after 3 seconds
+        }
       });
 
       function showInstallPrompt() {
-        if (installButton) return; // Already showing
+        if (installButton || window.matchMedia('(display-mode: standalone)').matches) return;
 
         installButton = document.createElement('div');
         installButton.id = 'pwa-install-prompt';
@@ -80,59 +110,116 @@
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background: #3b82f6;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
             color: white;
-            padding: 16px 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            padding: 20px 24px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.3);
             cursor: pointer;
             font-family: Inter, sans-serif;
             font-size: 14px;
             font-weight: 500;
             z-index: 1000;
-            max-width: 300px;
-            animation: slideIn 0.3s ease-out;
+            max-width: 320px;
+            animation: slideInBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
           ">
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7,10 12,15 17,10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-              <div>
-                <div style="font-weight: 600;">Install Recyclr AI</div>
-                <div style="font-size: 12px; opacity: 0.9;">Get quick access to your content tools</div>
+            <div style="display: flex; align-items: center; gap: 16px;">
+              <div style="
+                width: 48px;
+                height: 48px;
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+              ">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7,10 12,15 17,10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+              </div>
+              <div style="flex: 1;">
+                <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px;">Install Recyclr AI</div>
+                <div style="font-size: 12px; opacity: 0.9; line-height: 1.4;">
+                  Get instant access to your content tools with our native app experience
+                </div>
               </div>
               <button onclick="dismissInstallPrompt()" style="
-                background: rgba(255,255,255,0.2);
+                background: rgba(255, 255, 255, 0.2);
                 border: none;
                 color: white;
-                width: 20px;
-                height: 20px;
+                width: 24px;
+                height: 24px;
                 border-radius: 50%;
                 cursor: pointer;
-                font-size: 12px;
-                margin-left: auto;
-              ">×</button>
+                font-size: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+                transition: background 0.2s;
+              " onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">×</button>
+            </div>
+            <div style="margin-top: 16px; display: flex; gap: 12px;">
+              <button onclick="installPWA()" style="
+                background: rgba(255, 255, 255, 0.2);
+                border: none;
+                color: white;
+                padding: 8px 16px;
+                border-radius: 8px;
+                font-size: 13px;
+                font-weight: 600;
+                cursor: pointer;
+                flex: 1;
+                transition: background 0.2s;
+              " onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                Install Now
+              </button>
+              <button onclick="dismissInstallPrompt()" style="
+                background: transparent;
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                color: white;
+                padding: 8px 16px;
+                border-radius: 8px;
+                font-size: 13px;
+                cursor: pointer;
+                transition: all 0.2s;
+              " onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">
+                Later
+              </button>
             </div>
           </div>
           <style>
-            @keyframes slideIn {
-              from { transform: translateY(100px); opacity: 0; }
-              to { transform: translateY(0); opacity: 1; }
+            @keyframes slideInBounce {
+              0% { transform: translateY(100px) scale(0.9); opacity: 0; }
+              50% { transform: translateY(-10px) scale(1.02); }
+              100% { transform: translateY(0) scale(1); opacity: 1; }
+            }
+            @keyframes slideOut {
+              from { transform: translateY(0) scale(1); opacity: 1; }
+              to { transform: translateY(100px) scale(0.9); opacity: 0; }
             }
           </style>
         `;
 
-        installButton.addEventListener('click', installPWA);
+        installButton.addEventListener('click', (e) => {
+          if (e.target.tagName !== 'BUTTON') {
+            installPWA();
+          }
+        });
+        
         document.body.appendChild(installButton);
 
-        // Auto-hide after 10 seconds
+        // Auto-hide after 15 seconds
         setTimeout(() => {
           if (installButton && installButton.parentNode) {
             dismissInstallPrompt();
           }
-        }, 10000);
+        }, 15000);
       }
 
       function installPWA() {
@@ -140,38 +227,132 @@
           deferredPrompt.prompt();
           deferredPrompt.userChoice.then((choiceResult) => {
             console.log('User choice:', choiceResult.outcome);
+            localStorage.setItem('installPromptShown', Date.now().toString());
             deferredPrompt = null;
             dismissInstallPrompt();
+            
+            if (choiceResult.outcome === 'accepted') {
+              // Track successful install
+              console.log('PWA installed successfully');
+            }
           });
         }
       }
 
       function dismissInstallPrompt() {
         if (installButton && installButton.parentNode) {
-          installButton.style.animation = 'slideOut 0.3s ease-in forwards';
+          installButton.style.animation = 'slideOut 0.4s ease-in forwards';
+          localStorage.setItem('installDismissed', Date.now().toString());
           setTimeout(() => {
             if (installButton && installButton.parentNode) {
               installButton.parentNode.removeChild(installButton);
               installButton = null;
             }
-          }, 300);
+          }, 400);
         }
       }
 
-      // Add slideOut animation
-      const style = document.createElement('style');
-      style.textContent = `
-        @keyframes slideOut {
-          from { transform: translateY(0); opacity: 1; }
-          to { transform: translateY(100px); opacity: 0; }
-        }
-      `;
-      document.head.appendChild(style);
+      function showUpdateNotification() {
+        const updateNotification = document.createElement('div');
+        updateNotification.innerHTML = `
+          <div style="
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+            font-family: Inter, sans-serif;
+            font-size: 14px;
+            z-index: 1001;
+            animation: slideInFromTop 0.3s ease-out;
+          ">
+            <div style="font-weight: 600; margin-bottom: 4px;">Update Available</div>
+            <div style="font-size: 12px; opacity: 0.9;">New features are ready. Refresh to update.</div>
+            <button onclick="window.location.reload()" style="
+              background: rgba(255, 255, 255, 0.2);
+              border: none;
+              color: white;
+              padding: 6px 12px;
+              border-radius: 6px;
+              font-size: 12px;
+              cursor: pointer;
+              margin-top: 8px;
+            ">Refresh Now</button>
+          </div>
+          <style>
+            @keyframes slideInFromTop {
+              from { transform: translateY(-100px); opacity: 0; }
+              to { transform: translateY(0); opacity: 1; }
+            }
+          </style>
+        `;
+        
+        document.body.appendChild(updateNotification);
+        setTimeout(() => {
+          if (updateNotification.parentNode) {
+            updateNotification.parentNode.removeChild(updateNotification);
+          }
+        }, 10000);
+      }
 
+      // Handle PWA installation success
       window.addEventListener('appinstalled', (evt) => {
-        console.log('App was installed');
+        console.log('Recyclr AI PWA was installed');
         dismissInstallPrompt();
+        
+        // Show success message
+        const successMessage = document.createElement('div');
+        successMessage.innerHTML = `
+          <div style="
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+            font-family: Inter, sans-serif;
+            font-size: 14px;
+            z-index: 1000;
+            animation: slideInBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+          ">
+            <div style="font-weight: 600;">✅ Recyclr AI Installed!</div>
+            <div style="font-size: 12px; opacity: 0.9; margin-top: 4px;">You can now access the app from your home screen</div>
+          </div>
+        `;
+        document.body.appendChild(successMessage);
+        setTimeout(() => {
+          if (successMessage.parentNode) {
+            successMessage.parentNode.removeChild(successMessage);
+          }
+        }, 5000);
       });
+
+      // Handle share target data
+      if (window.location.search.includes('shared=true')) {
+        // Handle shared content when app opens
+        setTimeout(() => {
+          const event = new CustomEvent('shareReceived', {
+            detail: { timestamp: Date.now() }
+          });
+          window.dispatchEvent(event);
+        }, 1000);
+      }
+
+      // Enable notification permissions
+      if ('Notification' in window && 'serviceWorker' in navigator) {
+        setTimeout(() => {
+          if (Notification.permission === 'default') {
+            Notification.requestPermission().then(permission => {
+              console.log('Notification permission:', permission);
+            });
+          }
+        }, 5000);
+      }
     </script>
   </body>
 </html>

@@ -8,6 +8,63 @@
   "background_color": "#ffffff",
   "theme_color": "#3b82f6",
   "orientation": "portrait-primary",
+  "scope": "/",
+  "id": "recyclr-ai-app",
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Create Content",
+      "short_name": "Create",
+      "description": "Upload and create new content",
+      "url": "/dashboard/content",
+      "icons": [
+        {
+          "src": "/pwa-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Repurpose Content", 
+      "short_name": "Repurpose",
+      "description": "Transform content for different platforms",
+      "url": "/dashboard/repurpose",
+      "icons": [
+        {
+          "src": "/pwa-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Templates",
+      "short_name": "Templates", 
+      "description": "Browse and use content templates",
+      "url": "/dashboard/templates",
+      "icons": [
+        {
+          "src": "/pwa-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Schedule Posts",
+      "short_name": "Schedule",
+      "description": "Schedule content for publishing",
+      "url": "/dashboard/scheduling",
+      "icons": [
+        {
+          "src": "/pwa-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
   "icons": [
     {
       "src": "/pwa-192x192.png",
@@ -35,18 +92,51 @@
     }
   ],
   "categories": ["productivity", "business", "social"],
+  "lang": "en",
+  "dir": "ltr",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "protocol_handlers": [
+    {
+      "protocol": "web+recyclr",
+      "url": "/dashboard/repurpose?url=%s"
+    }
+  ],
+  "share_target": {
+    "action": "/dashboard/content",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "file",
+          "accept": ["text/plain", "text/markdown", "application/pdf"]
+        }
+      ]
+    }
+  },
   "screenshots": [
     {
       "src": "/screenshot-wide.png",
       "sizes": "1280x720",
       "type": "image/png",
-      "form_factor": "wide"
+      "form_factor": "wide",
+      "label": "Recyclr AI Dashboard"
     },
     {
       "src": "/screenshot-narrow.png",
       "sizes": "750x1334",
       "type": "image/png",
-      "form_factor": "narrow"
+      "form_factor": "narrow",
+      "label": "Recyclr AI Mobile View"
     }
   ]
 }

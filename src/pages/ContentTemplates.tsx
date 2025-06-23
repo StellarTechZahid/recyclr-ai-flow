@@ -22,7 +22,7 @@ interface Template {
   description: string;
   platform: string;
   template_content: string;
-  variables: string[];
+  variables?: string[];
   category: string;
   is_public: boolean;
   usage_count: number;
@@ -103,7 +103,6 @@ const ContentTemplates = () => {
           description: templateForm.description,
           platform: templateForm.platform,
           template_content: templateForm.template_content,
-          variables,
           category: templateForm.category,
           is_public: templateForm.is_public,
           usage_count: 0
@@ -171,7 +170,7 @@ const ContentTemplates = () => {
 
   const filteredTemplates = templates.filter(template => {
     const matchesSearch = template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         template.description.toLowerCase().includes(searchTerm.toLowerCase());
+                         (template.description?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     const matchesPlatform = selectedPlatform === "all" || template.platform === selectedPlatform;
     const matchesCategory = selectedCategory === "all" || template.category === selectedCategory;
     
@@ -331,84 +330,91 @@ const ContentTemplates = () => {
 
         {/* Templates Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredTemplates.map((template) => (
-            <Card key={template.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg">{template.name}</CardTitle>
-                    <CardDescription className="mt-1">{template.description}</CardDescription>
-                  </div>
-                  <div className="flex items-center space-x-1 ml-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyTemplate(template)}
-                    >
-                      <Copy className="w-4 h-4" />
-                    </Button>
-                    {template.user_id === user?.id && (
-                      <>
-                        <Button variant="ghost" size="sm">
-                          <Edit3 className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteTemplate(template.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-2">
-                    <Badge className="bg-blue-100 text-blue-800">
-                      {platforms.find(p => p.id === template.platform)?.name}
-                    </Badge>
-                    <Badge variant="outline">{template.category}</Badge>
-                    {template.is_public && (
-                      <Badge variant="secondary">Public</Badge>
-                    )}
-                  </div>
+          {filteredTemplates.map((template) => {
+            // Extract variables from template content for display
+            const variables = Array.from(
+              template.template_content.matchAll(/\{\{(\w+)\}\}/g)
+            ).map(match => match[1]);
 
-                  <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg max-h-32 overflow-y-auto">
-                    {template.template_content}
+            return (
+              <Card key={template.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <CardTitle className="text-lg">{template.name}</CardTitle>
+                      <CardDescription className="mt-1">{template.description}</CardDescription>
+                    </div>
+                    <div className="flex items-center space-x-1 ml-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyTemplate(template)}
+                      >
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                      {template.user_id === user?.id && (
+                        <>
+                          <Button variant="ghost" size="sm">
+                            <Edit3 className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deleteTemplate(template.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <Badge className="bg-blue-100 text-blue-800">
+                        {platforms.find(p => p.id === template.platform)?.name}
+                      </Badge>
+                      <Badge variant="outline">{template.category}</Badge>
+                      {template.is_public && (
+                        <Badge variant="secondary">Public</Badge>
+                      )}
+                    </div>
 
-                  {template.variables.length > 0 && (
-                    <div>
-                      <p className="text-xs font-medium text-gray-700 mb-1">Variables:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {template.variables.map((variable) => (
-                          <Badge key={variable} variant="outline" className="text-xs">
-                            {`{{${variable}}}`}
-                          </Badge>
-                        ))}
+                    <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg max-h-32 overflow-y-auto">
+                      {template.template_content}
+                    </div>
+
+                    {variables.length > 0 && (
+                      <div>
+                        <p className="text-xs font-medium text-gray-700 mb-1">Variables:</p>
+                        <div className="flex flex-wrap gap-1">
+                          {variables.map((variable) => (
+                            <Badge key={variable} variant="outline" className="text-xs">
+                              {`{{${variable}}}`}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  <div className="flex items-center justify-between pt-2 border-t">
-                    <div className="text-xs text-gray-500">
-                      Used {template.usage_count} times
+                    <div className="flex items-center justify-between pt-2 border-t">
+                      <div className="text-xs text-gray-500">
+                        Used {template.usage_count} times
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => useTemplate(template)}
+                      >
+                        <Zap className="w-4 h-4 mr-1" />
+                        Use Template
+                      </Button>
                     </div>
-                    <Button
-                      size="sm"
-                      onClick={() => useTemplate(template)}
-                    >
-                      <Zap className="w-4 h-4 mr-1" />
-                      Use Template
-                    </Button>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         {filteredTemplates.length === 0 && (
