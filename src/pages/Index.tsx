@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowRight, Zap, Calendar, BarChart3, Sparkles, Users, Shield } from "lucide-react";
+import { ArrowRight, Zap, Calendar, BarChart3, Sparkles, Users, Shield, Download, Smartphone, Wifi, Bell } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Index = () => {
@@ -20,8 +20,8 @@ const Index = () => {
           </div>
           <nav className="hidden md:flex items-center space-x-8">
             <a href="#features" className="text-gray-600 hover:text-gray-900 transition-colors">Features</a>
+            <a href="#app" className="text-gray-600 hover:text-gray-900 transition-colors">Mobile App</a>
             <a href="#pricing" className="text-gray-600 hover:text-gray-900 transition-colors">Pricing</a>
-            <a href="#about" className="text-gray-600 hover:text-gray-900 transition-colors">About</a>
           </nav>
           <div className="flex items-center space-x-4">
             <Button variant="ghost" asChild>
@@ -112,12 +112,78 @@ const Index = () => {
         </div>
       </section>
 
+      {/* App Installation Section */}
+      <section id="app" className="bg-gradient-to-r from-blue-600 to-purple-600 py-20 text-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">Download Our Mobile App</h2>
+            <p className="text-xl opacity-90 max-w-2xl mx-auto">
+              Get the full Recyclr AI experience on your mobile device. Works offline, sends push notifications, and integrates seamlessly with your workflow.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+            <div className="space-y-8">
+              <div className="flex items-start space-x-4">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Smartphone className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">Native App Experience</h3>
+                  <p className="opacity-90">Install directly to your home screen for instant access. No app store required - it's a Progressive Web App (PWA).</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-4">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Wifi className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">Works Offline</h3>
+                  <p className="opacity-90">Access your content, templates, and drafts even without internet connection. Changes sync when you're back online.</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-4">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Bell className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">Push Notifications</h3>
+                  <p className="opacity-90">Get notified when your content is ready, scheduled posts go live, or analytics insights are available.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="text-center">
+              <div className="bg-white/10 rounded-3xl p-8 backdrop-blur-md border border-white/20">
+                <div className="w-32 h-32 bg-white/20 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                  <Download className="w-16 h-16" />
+                </div>
+                <h3 className="text-2xl font-bold mb-4">Install Recyclr AI</h3>
+                <p className="mb-6 opacity-90">Tap the install button when it appears, or add to home screen from your browser menu.</p>
+                <div className="space-y-3">
+                  <div className="bg-white/20 rounded-lg p-3 text-sm">
+                    📱 iOS: Tap Share → Add to Home Screen
+                  </div>
+                  <div className="bg-white/20 rounded-lg p-3 text-sm">
+                    🤖 Android: Tap Menu → Install App
+                  </div>
+                  <div className="bg-white/20 rounded-lg p-3 text-sm">
+                    💻 Desktop: Click Install button in address bar
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Social Proof */}
       <section className="bg-white py-16">
         <div className="container mx-auto px-4 text-center">
           <h3 className="text-2xl font-semibold mb-8 text-gray-600">Trusted by creators and brands worldwide</h3>
           <div className="flex flex-wrap justify-center items-center gap-8 opacity-60">
-            {/* Placeholder for logos */}
             <div className="w-32 h-12 bg-gray-200 rounded flex items-center justify-center">
               <Users className="w-6 h-6 text-gray-400" />
             </div>

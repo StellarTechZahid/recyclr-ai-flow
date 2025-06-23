@@ -1,18 +1,21 @@
 
-const CACHE_NAME = 'recyclr-ai-v2';
-const API_CACHE = 'recyclr-api-v1';
-const STATIC_CACHE = 'recyclr-static-v1';
+const CACHE_NAME = 'recyclr-ai-v3';
+const API_CACHE = 'recyclr-api-v2';
+const STATIC_CACHE = 'recyclr-static-v2';
+const OFFLINE_PAGE = '/offline.html';
 
 const urlsToCache = [
   '/',
+  '/auth/login',
+  '/auth/signup',
   '/dashboard',
   '/dashboard/content',
   '/dashboard/repurpose',
   '/dashboard/templates',
   '/dashboard/scheduling',
   '/dashboard/analytics',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
+  '/dashboard/bulk',
+  '/offline.html',
   '/manifest.json',
   '/pwa-192x192.png',
   '/pwa-512x512.png'
@@ -22,8 +25,10 @@ const urlsToCache = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     Promise.all([
-      caches.open(STATIC_CACHE)
-        .then((cache) => cache.addAll(urlsToCache)),
+      caches.open(STATIC_CACHE).then((cache) => cache.addAll(urlsToCache)),
+      caches.open(CACHE_NAME).then((cache) => 
+        cache.add(new Request(OFFLINE_PAGE, {cache: 'reload'}))
+      ),
       self.skipWaiting()
     ])
   );
@@ -36,7 +41,7 @@ self.addEventListener('activate', (event) => {
       caches.keys().then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
-            if (cacheName !== CACHE_NAME && cacheName !== API_CACHE && cacheName !== STATIC_CACHE) {
+            if (!['recyclr-ai-v3', 'recyclr-api-v2', 'recyclr-static-v2'].includes(cacheName)) {
               return caches.delete(cacheName);
             }
           })
@@ -47,59 +52,83 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - network first for API, cache first for static resources
+// Fetch event - comprehensive offline strategy
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Handle API requests with network first strategy
+  // Skip non-GET requests for caching
+  if (request.method !== 'GET') return;
+
+  // Handle API requests with network first, cache fallback
   if (url.hostname.includes('supabase.co') || request.url.includes('/api/')) {
     event.respondWith(
       caches.open(API_CACHE).then(cache => {
         return fetch(request)
           .then(response => {
-            // Only cache successful GET requests
-            if (request.method === 'GET' && response.status === 200) {
+            if (response.status === 200) {
               cache.put(request, response.clone());
             }
             return response;
           })
           .catch(() => {
-            // Return cached version if network fails
-            return cache.match(request);
+            return cache.match(request).then(cachedResponse => {
+              if (cachedResponse) {
+                return cachedResponse;
+              }
+              // Return offline message for failed API requests
+              return new Response(JSON.stringify({
+                error: 'Offline - cached data not available',
+                offline: true
+              }), {
+                status: 503,
+                headers: { 'Content-Type': 'application/json' }
+              });
+            });
           });
       })
     );
     return;
   }
 
+  // Handle navigation requests
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .catch(() => {
+          return caches.match(request).then(cachedResponse => {
+            if (cachedResponse) {
+              return cachedResponse;
+            }
+            return caches.match(OFFLINE_PAGE);
+          });
+        })
+    );
+    return;
+  }
+
   // Handle static resources with cache first strategy
   event.respondWith(
-    caches.match(request)
-      .then((response) => {
-        // Return cached version if available
-        if (response) {
-          return response;
-        }
+    caches.match(request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse;
+      }
 
-        // Fetch from network and cache the response
-        return fetch(request).then((response) => {
-          // Only cache successful responses for same origin
-          if (response.status === 200 && request.url.startsWith(self.location.origin)) {
-            const responseToCache = response.clone();
-            caches.open(STATIC_CACHE)
-              .then((cache) => {
-                cache.put(request, responseToCache);
-              });
-          }
-          return response;
-        }).catch(() => {
-          // Return offline page for navigation requests
-          if (request.mode === 'navigate') {
-            return caches.match('/');
-          }
-        });
-      })
+      return fetch(request).then((response) => {
+        if (response.status === 200 && request.url.startsWith(self.location.origin)) {
+          const responseToCache = response.clone();
+          caches.open(STATIC_CACHE).then((cache) => {
+            cache.put(request, responseToCache);
+          });
+        }
+        return response;
+      }).catch(() => {
+        // Return a fallback for failed static resource requests
+        if (request.destination === 'image') {
+          return new Response('', { status: 404 });
+        }
+      });
+    })
   );
 });
 
@@ -108,18 +137,23 @@ self.addEventListener('sync', (event) => {
   if (event.tag === 'content-sync') {
     event.waitUntil(syncPendingContent());
   }
+  if (event.tag === 'analytics-sync') {
+    event.waitUntil(syncAnalytics());
+  }
 });
 
 // Push notifications
 self.addEventListener('push', (event) => {
+  const data = event.data ? event.data.json() : {};
   const options = {
-    body: event.data ? event.data.text() : 'New content ready!',
+    body: data.body || 'Your content is ready!',
     icon: '/pwa-192x192.png',
     badge: '/pwa-192x192.png',
     vibrate: [100, 50, 100],
     data: {
       dateOfArrival: Date.now(),
-      primaryKey: 1
+      primaryKey: data.id || 1,
+      url: data.url || '/dashboard'
     },
     actions: [
       {
@@ -146,7 +180,7 @@ self.addEventListener('notificationclick', (event) => {
 
   if (event.action === 'explore') {
     event.waitUntil(
-      clients.openWindow('/dashboard')
+      clients.openWindow(event.notification.data.url || '/dashboard')
     );
   }
 });
@@ -166,14 +200,25 @@ async function handleShareTarget(request) {
   const text = formData.get('text') || '';
   const url = formData.get('url') || '';
   
-  // Store shared content in IndexedDB for the app to pick up
+  // Store shared content for the app to pick up
   const shareData = { title, text, url, timestamp: Date.now() };
   
-  // Return a response that redirects to the content page
   return Response.redirect('/dashboard/content?shared=true', 303);
 }
 
 async function syncPendingContent() {
-  // Implementation for syncing content when connection is restored
   console.log('Syncing pending content...');
+  // Implementation for syncing offline actions
 }
+
+async function syncAnalytics() {
+  console.log('Syncing analytics data...');
+  // Implementation for syncing analytics data
+}
+
+// Listen for skip waiting message
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
