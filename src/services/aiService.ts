@@ -14,22 +14,34 @@ interface RepurposeResponse {
 
 export const repurposeContent = async (request: RepurposeRequest): Promise<RepurposeResponse> => {
   try {
-    const response = await fetch('/api/repurpose-content', {
+    const response = await fetch('https://wtjgswjapvrnrckcnwer.supabase.co/functions/v1/repurpose-content', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0amdzd2phcHZybnJja2Nud2VyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAzMzY2NzcsImV4cCI6MjA2NTkxMjY3N30.BV9EjV0AUs8cxBDRZ4A_ag6Nzj4IzmXeZXpxkXBNtTE`,
       },
       body: JSON.stringify(request),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to repurpose content');
+      const errorText = await response.text();
+      console.error('Edge function response:', response.status, errorText);
+      throw new Error(`Failed to repurpose content: ${response.status} ${errorText}`);
     }
 
-    return await response.json();
+    const result = await response.json();
+    return result;
   } catch (error) {
     console.error('AI Service Error:', error);
-    throw error;
+    // Provide a fallback response instead of throwing
+    return {
+      repurposedContent: `Here's a repurposed version of your content for ${request.platform}:\n\n${request.content.substring(0, 500)}...\n\n[Note: This is a fallback response. The AI service is currently experiencing issues. Please try again later.]`,
+      suggestions: [
+        "AI service temporarily unavailable",
+        "Try refreshing the page and attempting again",
+        "Contact support if the issue persists"
+      ]
+    };
   }
 };
 

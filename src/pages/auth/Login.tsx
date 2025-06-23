@@ -7,11 +7,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Sparkles, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
   const { signIn } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,6 +27,31 @@ const Login = () => {
       console.error('Login error:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      toast.error("Please enter your email address first");
+      return;
+    }
+
+    setIsResettingPassword(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
+
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("Password reset email sent! Check your inbox.");
+      }
+    } catch (error: any) {
+      toast.error("Failed to send reset email. Please try again.");
+      console.error('Password reset error:', error);
+    } finally {
+      setIsResettingPassword(false);
     }
   };
 
@@ -80,9 +108,13 @@ const Login = () => {
             </form>
             
             <div className="mt-6 text-center text-sm">
-              <a href="#" className="text-blue-600 hover:underline">
-                Forgot your password?
-              </a>
+              <button 
+                onClick={handleForgotPassword}
+                disabled={isResettingPassword}
+                className="text-blue-600 hover:underline disabled:opacity-50"
+              >
+                {isResettingPassword ? "Sending..." : "Forgot your password?"}
+              </button>
             </div>
             
             <div className="mt-6 text-center text-sm text-gray-600">

@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,6 +16,7 @@ import ContentTemplates from "./pages/ContentTemplates";
 import ContentScheduling from "./pages/ContentScheduling";
 import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
+import ResetPassword from "./pages/auth/ResetPassword";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +31,9 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth/login" element={<Login />} />
             <Route path="/auth/signup" element={<Signup />} />
+            <Route path="/auth/reset-password" element={
+              <ResetPassword />
+            } />
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <Dashboard />
