@@ -3,12 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Wand2, Copy, Download, Share } from "lucide-react";
+import { ArrowLeft, Wand2, Copy, Download, Share, FileText } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { repurposeContent, platforms, tones } from "@/services/aiService";
+import ContentUploadWidget from "@/components/ContentUploadWidget";
 
 interface ContentItem {
   id: string;
@@ -198,38 +199,58 @@ const ContentRepurpose = () => {
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Input Section */}
           <div className="space-y-6">
+            {/* Add upload widget if no content is available */}
+            {availableContent.length === 0 && (
+              <ContentUploadWidget onContentUploaded={fetchUserContent} />
+            )}
+
             <Card>
               <CardHeader>
                 <CardTitle>Select Content to Repurpose</CardTitle>
-                <CardDescription>Choose from your uploaded content</CardDescription>
+                <CardDescription>
+                  {availableContent.length === 0 
+                    ? "Upload content above to get started" 
+                    : "Choose from your uploaded content"
+                  }
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Select 
-                  value={selectedContent?.id || ""} 
-                  onValueChange={(value) => {
-                    const content = availableContent.find(c => c.id === value);
-                    setSelectedContent(content || null);
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select content to repurpose" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableContent.map((content) => (
-                      <SelectItem key={content.id} value={content.id}>
-                        {content.title} ({content.content_type})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {availableContent.length > 0 ? (
+                  <>
+                    <Select 
+                      value={selectedContent?.id || ""} 
+                      onValueChange={(value) => {
+                        const content = availableContent.find(c => c.id === value);
+                        setSelectedContent(content || null);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select content to repurpose" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableContent.map((content) => (
+                          <SelectItem key={content.id} value={content.id}>
+                            {content.title} ({content.content_type})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
 
-                {selectedContent && (
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Original Content Preview:</h4>
-                    <div className="p-3 bg-gray-50 rounded-lg max-h-40 overflow-y-auto text-sm">
-                      {selectedContent.original_content.substring(0, 500)}
-                      {selectedContent.original_content.length > 500 && '...'}
-                    </div>
+                    {selectedContent && (
+                      <div className="space-y-2">
+                        <h4 className="font-medium">Original Content Preview:</h4>
+                        <div className="p-3 bg-gray-50 rounded-lg max-h-40 overflow-y-auto text-sm">
+                          {selectedContent.original_content.substring(0, 500)}
+                          {selectedContent.original_content.length > 500 && '...'}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                    <p>No content available</p>
+                    <p className="text-sm">Upload your first piece of content above to start repurposing!</p>
                   </div>
                 )}
               </CardContent>

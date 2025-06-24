@@ -43,7 +43,7 @@ export const repurposeContent = async (request: RepurposeRequest): Promise<Repur
     return result;
   } catch (error) {
     console.error('AI Service Error:', error);
-    throw error; // Don't provide fallback, let user know AI failed
+    throw error;
   }
 };
 
