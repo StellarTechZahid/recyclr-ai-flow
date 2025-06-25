@@ -42,6 +42,7 @@ const ContentUploadWidget = ({ onContentUploaded }: ContentUploadWidgetProps) =>
           title: title.trim(),
           original_content: content.trim(),
           content_type: contentType,
+          source_type: 'manual', // Add the required source_type field
         });
 
       if (error) throw error;
