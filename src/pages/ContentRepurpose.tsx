@@ -69,9 +69,8 @@ const ContentRepurpose = () => {
 
     setIsLoading(true);
     try {
-      console.log('Starting repurpose request...');
+      console.log('Starting repurpose with Mistral-7B model...');
       
-      // Use the enhanced AI service
       const result = await repurposeContent({
         content: selectedContent.original_content,
         platform: selectedPlatform,
@@ -80,6 +79,11 @@ const ContentRepurpose = () => {
       });
 
       console.log('Repurpose result:', result);
+      
+      if (!result.repurposedContent) {
+        throw new Error('No repurposed content received from AI');
+      }
+      
       setRepurposedContent(result.repurposedContent);
       setSuggestions(result.suggestions || []);
       
@@ -87,10 +91,10 @@ const ContentRepurpose = () => {
       const platform = platforms.find(p => p.id === selectedPlatform);
       await saveRepurposedContent(result.repurposedContent, platform?.name || selectedPlatform);
       
-      toast.success('Content repurposed successfully!');
+      toast.success(`Content repurposed successfully using ${result.model || 'Mistral-7B'}!`);
     } catch (error: any) {
       console.error('Repurpose error:', error);
-      toast.error('Failed to repurpose content. Please try again.');
+      toast.error(`Failed to repurpose content: ${error.message}`);
     } finally {
       setIsLoading(false);
     }

@@ -60,6 +60,7 @@ export class SocialMediaManager {
         user_id: post.userId,
         platform: post.platform,
         content: post.content,
+        title: post.content.substring(0, 50) + '...', // Generate title from content
         scheduled_date: post.scheduledFor.toISOString().split('T')[0],
         scheduled_time: post.scheduledFor.toTimeString().split(' ')[0],
         status: 'scheduled'

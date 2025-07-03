@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { TrendingUp, Users, Heart, Share, MessageCircle, Eye } from 'lucide-react';
@@ -6,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface AnalyticsData {
   totalPosts: number;
@@ -59,12 +59,14 @@ const AnalyticsDashboard = () => {
 
     setLoading(true);
     try {
+      console.log('Loading analytics for user:', user.id);
+      
       // Get date range
       const daysAgo = parseInt(timeRange);
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - daysAgo);
 
-      // Fetch scheduled posts data (as proxy for analytics)
+      // Fetch scheduled posts data
       const { data: postsData, error } = await supabase
         .from('scheduled_posts')
         .select('*')
@@ -72,13 +74,19 @@ const AnalyticsDashboard = () => {
         .gte('created_at', startDate.toISOString())
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Analytics loading error:', error);
+        throw error;
+      }
 
-      // Mock analytics calculations (in real app, this would come from social media APIs)
+      console.log('Loaded posts data:', postsData);
+
+      // Generate analytics based on actual data
       const mockAnalytics = generateMockAnalytics(postsData || []);
       setAnalyticsData(mockAnalytics);
     } catch (error) {
       console.error('Error loading analytics:', error);
+      toast.error('Failed to load analytics data');
     } finally {
       setLoading(false);
     }

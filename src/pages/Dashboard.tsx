@@ -50,6 +50,8 @@ const Dashboard = () => {
     if (!user) return;
 
     try {
+      console.log('Loading dashboard data for user:', user.id);
+      
       // Load content statistics
       const { data: contentData, error: contentError } = await supabase
         .from('content')
@@ -58,7 +60,12 @@ const Dashboard = () => {
         .order('created_at', { ascending: false })
         .limit(5);
 
-      if (contentError) throw contentError;
+      if (contentError) {
+        console.error('Content loading error:', contentError);
+        throw contentError;
+      }
+
+      console.log('Loaded content:', contentData);
 
       // Load repurposed content count for this month
       const currentMonth = new Date();
@@ -69,15 +76,25 @@ const Dashboard = () => {
         .eq('user_id', user.id)
         .gte('created_at', currentMonth.toISOString());
 
-      if (repurposedError) throw repurposedError;
+      if (repurposedError) {
+        console.error('Repurposed content error:', repurposedError);
+        // Don't throw, just log
+      }
 
       // Load scheduled posts
-      const scheduledPosts = await socialMediaManager.getScheduledPosts(user.id);
+      let scheduledPostsCount = 0;
+      try {
+        const scheduledPosts = await socialMediaManager.getScheduledPosts(user.id);
+        scheduledPostsCount = scheduledPosts.filter(post => post.status === 'scheduled').length;
+      } catch (error) {
+        console.error('Scheduled posts error:', error);
+        // Don't throw, use default value
+      }
 
       setStats({
         totalContent: contentData?.length || 0,
         repurposedThisMonth: repurposedData?.length || 0,
-        scheduledPosts: scheduledPosts.filter(post => post.status === 'scheduled').length,
+        scheduledPosts: scheduledPostsCount,
         engagementRate: 4.2 // Mock data - would come from social media APIs
       });
 
