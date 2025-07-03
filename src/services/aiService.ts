@@ -2,7 +2,7 @@
 export interface RepurposeResponse {
   repurposedContent: string;
   suggestions: string[];
-  model?: string; // Add this optional property
+  model?: string;
 }
 
 export interface RepurposeRequest {
@@ -30,18 +30,31 @@ export const tones = [
 ];
 
 export const repurposeContent = async (request: RepurposeRequest): Promise<RepurposeResponse> => {
-  const response = await fetch('/api/repurpose', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(request),
-  });
+  console.log('Making repurpose request:', request);
+  
+  try {
+    const response = await fetch('https://wtjgswjapvrnrckcnwer.supabase.co/functions/v1/repurpose-content', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0amdzd2phcHZybnJja2Nud2VyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAzMzY2NzcsImV4cCI6MjA2NTkxMjY3N30.BV9EjV0AUs8cxBDRZ4A_ag6Nzj4IzmXeZXpxkXBNtTE`,
+      },
+      body: JSON.stringify(request),
+    });
 
-  if (!response.ok) {
-    throw new Error(`Failed to repurpose content: ${response.status}`);
+    console.log('Response status:', response.status);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API Error:', response.status, errorText);
+      throw new Error(`Failed to repurpose content: ${response.status} - ${errorText}`);
+    }
+
+    const result = await response.json();
+    console.log('Repurpose result:', result);
+    return result;
+  } catch (error) {
+    console.error('Repurpose error:', error);
+    throw error;
   }
-
-  const result = await response.json();
-  return result;
 };

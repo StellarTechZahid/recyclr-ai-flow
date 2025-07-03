@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Wand2, Copy, Download, Share, FileText, Calendar } from "lucide-react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -19,16 +20,59 @@ interface ContentItem {
 }
 
 const ContentRepurpose = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const contentId = searchParams.get('contentId');
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
   const [availableContent, setAvailableContent] = useState<ContentItem[]>([]);
-  const [selectedPlatform, setSelectedPlatform] = useState("");
-  const [selectedTone, setSelectedTone] = useState("professional");
-  const [repurposedContent, setRepurposedContent] = useState("");
+  const [selectedPlatform, setSelectedPlatform] = useState(searchParams.get('platform') || "");
+  const [selectedTone, setSelectedTone] = useState(searchParams.get('tone') || "professional");
+  const [repurposedContent, setRepurposedContent] = useState(searchParams.get('repurposed') || "");
   const [isLoading, setIsLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const { user } = useAuth();
+
+  // Save state to URL parameters
+  const updateUrlParams = (updates: Record<string, string>) => {
+    const newParams = new URLSearchParams(searchParams);
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value) {
+        newParams.set(key, value);
+      } else {
+        newParams.delete(key);
+      }
+    });
+    setSearchParams(newParams);
+  };
+
+  // Load state from localStorage on component mount
+  useEffect(() => {
+    const savedState = localStorage.getItem('contentRepurposeState');
+    if (savedState) {
+      try {
+        const parsed = JSON.parse(savedState);
+        if (parsed.repurposedContent && !repurposedContent) {
+          setRepurposedContent(parsed.repurposedContent);
+        }
+        if (parsed.suggestions) {
+          setSuggestions(parsed.suggestions);
+        }
+      } catch (error) {
+        console.error('Error loading saved state:', error);
+      }
+    }
+  }, []);
+
+  // Save state to localStorage whenever it changes
+  useEffect(() => {
+    const stateToSave = {
+      repurposedContent,
+      suggestions,
+      selectedPlatform,
+      selectedTone,
+    };
+    localStorage.setItem('contentRepurposeState', JSON.stringify(stateToSave));
+  }, [repurposedContent, suggestions, selectedPlatform, selectedTone]);
 
   useEffect(() => {
     fetchUserContent();
@@ -43,17 +87,33 @@ const ContentRepurpose = () => {
     }
   }, [contentId, availableContent]);
 
+  // Update URL when platform changes
+  useEffect(() => {
+    updateUrlParams({ platform: selectedPlatform });
+  }, [selectedPlatform]);
+
+  // Update URL when tone changes
+  useEffect(() => {
+    updateUrlParams({ tone: selectedTone });
+  }, [selectedTone]);
+
   const fetchUserContent = async () => {
     if (!user) return;
 
     try {
+      console.log('Fetching user content...');
       const { data, error } = await supabase
         .from('content')
         .select('id, title, original_content, content_type')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching content:', error);
+        throw error;
+      }
+      
+      console.log('Fetched content:', data);
       setAvailableContent(data || []);
     } catch (error: any) {
       console.error('Error fetching content:', error);
@@ -86,6 +146,9 @@ const ContentRepurpose = () => {
       
       setRepurposedContent(result.repurposedContent);
       setSuggestions(result.suggestions || []);
+      
+      // Update URL with repurposed content
+      updateUrlParams({ repurposed: result.repurposedContent });
       
       // Save to database
       const platform = platforms.find(p => p.id === selectedPlatform);
@@ -169,13 +232,11 @@ const ContentRepurpose = () => {
         await navigator.share(shareData);
         toast.success('Content shared successfully!');
       } else {
-        // Fallback: copy to clipboard
         await navigator.clipboard.writeText(repurposedContent);
         toast.success('Content copied to clipboard for sharing!');
       }
     } catch (error) {
       console.error('Error sharing:', error);
-      // Fallback: copy to clipboard
       try {
         await navigator.clipboard.writeText(repurposedContent);
         toast.success('Content copied to clipboard!');
@@ -186,12 +247,11 @@ const ContentRepurpose = () => {
   };
 
   const scheduleRepurposedContent = () => {
-    // Navigate to schedule page with pre-filled content
     const params = new URLSearchParams({
       content: repurposedContent,
       platform: selectedPlatform
     });
-    window.location.href = `/schedule?${params.toString()}`;
+    navigate(`/schedule?${params.toString()}`);
   };
 
   const selectedPlatformInfo = platforms.find(p => p.id === selectedPlatform);
@@ -214,7 +274,6 @@ const ContentRepurpose = () => {
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Input Section */}
           <div className="space-y-6">
-            {/* Add upload widget if no content is available */}
             {availableContent.length === 0 && (
               <ContentUploadWidget onContentUploaded={fetchUserContent} />
             )}
@@ -237,6 +296,7 @@ const ContentRepurpose = () => {
                       onValueChange={(value) => {
                         const content = availableContent.find(c => c.id === value);
                         setSelectedContent(content || null);
+                        updateUrlParams({ contentId: value });
                       }}
                     >
                       <SelectTrigger>
@@ -328,7 +388,7 @@ const ContentRepurpose = () => {
                   {isLoading ? (
                     <>
                       <Wand2 className="w-4 h-4 mr-2 animate-spin" />
-                      Repurposing...
+                      Repurposing with Mistral-7B...
                     </>
                   ) : (
                     <>
@@ -341,12 +401,12 @@ const ContentRepurpose = () => {
             </Card>
           </div>
 
-          {/* Output Section - Enhanced */}
+          {/* Output Section */}
           <div className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Repurposed Content</CardTitle>
-                <CardDescription>AI-generated content for your selected platform</CardDescription>
+                <CardDescription>AI-generated content using Mistral-7B model</CardDescription>
               </CardHeader>
               <CardContent>
                 {repurposedContent ? (
@@ -354,7 +414,10 @@ const ContentRepurpose = () => {
                     <div className="relative">
                       <Textarea
                         value={repurposedContent}
-                        onChange={(e) => setRepurposedContent(e.target.value)}
+                        onChange={(e) => {
+                          setRepurposedContent(e.target.value);
+                          updateUrlParams({ repurposed: e.target.value });
+                        }}
                         rows={12}
                         className="resize-none"
                         placeholder="Repurposed content will appear here..."
@@ -378,12 +441,7 @@ const ContentRepurpose = () => {
                         <Share className="w-4 h-4 mr-2" />
                         Share
                       </Button>
-                      <Button 
-                        variant="default" 
-                        size="sm" 
-                        onClick={scheduleRepurposedContent}
-                        className="btn-primary-modern"
-                      >
+                      <Button variant="default" size="sm" onClick={scheduleRepurposedContent}>
                         <Calendar className="w-4 h-4 mr-2" />
                         Schedule Post
                       </Button>

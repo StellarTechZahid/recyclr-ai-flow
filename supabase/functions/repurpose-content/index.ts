@@ -15,13 +15,30 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Repurpose content function called');
+    
+    if (!huggingFaceToken) {
+      console.error('Missing HUGGING_FACE_ACCESS_TOKEN');
+      throw new Error('Hugging Face API token not configured');
+    }
+
     const { content, platform, contentType, tone } = await req.json();
     
     console.log('Using Hugging Face model: mistralai/Mistral-7B-Instruct-v0.1');
-    console.log('Request:', { content: content?.substring(0, 100), platform, contentType, tone });
+    console.log('Request params:', { 
+      contentLength: content?.length, 
+      platform, 
+      contentType, 
+      tone 
+    });
+
+    if (!content || !platform || !contentType || !tone) {
+      throw new Error('Missing required parameters: content, platform, contentType, or tone');
+    }
 
     // Create platform-specific prompt
     const prompt = createRepurposePrompt(content, platform, contentType, tone);
+    console.log('Generated prompt:', prompt.substring(0, 200) + '...');
     
     const response = await fetch(
       'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1',
@@ -38,15 +55,18 @@ serve(async (req) => {
             temperature: 0.7,
             top_p: 0.9,
             do_sample: true,
+            return_full_text: false,
           },
         }),
       }
     );
 
+    console.log('Hugging Face API response status:', response.status);
+
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Hugging Face API error:', response.status, errorText);
-      throw new Error(`Hugging Face API error: ${response.status}`);
+      throw new Error(`Hugging Face API error: ${response.status} - ${errorText}`);
     }
 
     const result = await response.json();
@@ -54,21 +74,31 @@ serve(async (req) => {
 
     let repurposedContent = '';
     if (Array.isArray(result) && result[0]?.generated_text) {
-      repurposedContent = result[0].generated_text.replace(prompt, '').trim();
+      repurposedContent = result[0].generated_text.trim();
     } else if (result.generated_text) {
-      repurposedContent = result.generated_text.replace(prompt, '').trim();
+      repurposedContent = result.generated_text.trim();
     } else {
-      throw new Error('Unexpected response format from Hugging Face');
+      console.error('Unexpected response format:', result);
+      throw new Error('Unexpected response format from Hugging Face API');
+    }
+
+    // Clean up the response - remove the prompt if it's included
+    if (repurposedContent.includes(prompt)) {
+      repurposedContent = repurposedContent.replace(prompt, '').trim();
     }
 
     // Generate suggestions based on the content
     const suggestions = generateSuggestions(platform, contentType);
 
-    return new Response(JSON.stringify({
+    const finalResponse = {
       repurposedContent,
       suggestions,
       model: 'mistralai/Mistral-7B-Instruct-v0.1'
-    }), {
+    };
+
+    console.log('Final response:', finalResponse);
+
+    return new Response(JSON.stringify(finalResponse), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
@@ -86,11 +116,11 @@ serve(async (req) => {
 
 function createRepurposePrompt(content: string, platform: string, contentType: string, tone: string): string {
   const platformInstructions = {
-    twitter: 'Create a engaging Twitter thread (max 280 chars per tweet). Start with a hook, break into 3-5 tweets, use emojis.',
-    linkedin: 'Create a professional LinkedIn post (max 3000 chars). Include insights, use line breaks, add relevant hashtags.',
-    instagram: 'Create an Instagram caption (max 2200 chars). Use storytelling, include emojis, add hashtags.',
+    twitter: 'Create engaging Twitter posts (max 280 chars per tweet). Use emojis and hashtags.',
+    linkedin: 'Create a professional LinkedIn post (max 3000 chars). Include insights and relevant hashtags.',
+    instagram: 'Create an Instagram caption (max 2200 chars). Use storytelling, emojis, and hashtags.',
     facebook: 'Create a Facebook post (max 5000 chars). Make it conversational and engaging.',
-    youtube: 'Create a YouTube video description (max 5000 chars). Include timestamps, clear structure.',
+    youtube: 'Create a YouTube video description (max 5000 chars). Include clear structure.',
     blog: 'Create a blog post outline with key points and structure.'
   };
 
@@ -102,11 +132,11 @@ function createRepurposePrompt(content: string, platform: string, contentType: s
     educational: 'Focus on teaching and explaining'
   };
 
-  return `Transform the following ${contentType} content for ${platform}. ${platformInstructions[platform] || 'Optimize for the platform'}. Tone: ${toneInstructions[tone] || 'professional'}. 
+  return `<s>[INST] Transform the following ${contentType} content for ${platform}. ${platformInstructions[platform] || 'Optimize for the platform'}. Tone: ${toneInstructions[tone] || 'professional'}.
 
 Original content: ${content}
 
-Repurposed content:`;
+Create the repurposed content now: [/INST]`;
 }
 
 function generateSuggestions(platform: string, contentType: string): string[] {
