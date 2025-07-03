@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Wand2, Copy, Download, Share, FileText } from "lucide-react";
+import { ArrowLeft, Wand2, Copy, Download, Share, FileText, Calendar } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -70,6 +70,8 @@ const ContentRepurpose = () => {
     setIsLoading(true);
     try {
       console.log('Starting repurpose request...');
+      
+      // Use the enhanced AI service
       const result = await repurposeContent({
         content: selectedContent.original_content,
         platform: selectedPlatform,
@@ -177,6 +179,15 @@ const ContentRepurpose = () => {
         toast.error('Failed to share content');
       }
     }
+  };
+
+  const scheduleRepurposedContent = () => {
+    // Navigate to schedule page with pre-filled content
+    const params = new URLSearchParams({
+      content: repurposedContent,
+      platform: selectedPlatform
+    });
+    window.location.href = `/schedule?${params.toString()}`;
   };
 
   const selectedPlatformInfo = platforms.find(p => p.id === selectedPlatform);
@@ -326,7 +337,7 @@ const ContentRepurpose = () => {
             </Card>
           </div>
 
-          {/* Output Section */}
+          {/* Output Section - Enhanced */}
           <div className="space-y-6">
             <Card>
               <CardHeader>
@@ -350,7 +361,7 @@ const ContentRepurpose = () => {
                       </div>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <Button variant="outline" size="sm" onClick={copyToClipboard}>
                         <Copy className="w-4 h-4 mr-2" />
                         Copy
@@ -362,6 +373,15 @@ const ContentRepurpose = () => {
                       <Button variant="outline" size="sm" onClick={shareContent}>
                         <Share className="w-4 h-4 mr-2" />
                         Share
+                      </Button>
+                      <Button 
+                        variant="default" 
+                        size="sm" 
+                        onClick={scheduleRepurposedContent}
+                        className="btn-primary-modern"
+                      >
+                        <Calendar className="w-4 h-4 mr-2" />
+                        Schedule Post
                       </Button>
                     </div>
                   </div>

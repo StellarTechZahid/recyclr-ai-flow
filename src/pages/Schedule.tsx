@@ -1,9 +1,9 @@
 
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
-import AnalyticsDashboard from "@/components/AnalyticsDashboard";
+import ScheduleCalendar from "@/components/ScheduleCalendar";
 
-const Analytics = () => {
+const Schedule = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200">
@@ -13,16 +13,23 @@ const Analytics = () => {
               <ArrowLeft className="w-5 h-5 mr-2" />
               Back to Dashboard
             </Link>
-            <h1 className="text-2xl font-bold brand-gradient-text">Analytics</h1>
+            <h1 className="text-2xl font-bold brand-gradient-text">Content Scheduler</h1>
           </div>
         </div>
       </header>
 
       <div className="container mx-auto px-4 py-8 max-w-7xl">
-        <AnalyticsDashboard />
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Schedule Your Content</h2>
+          <p className="text-lg text-gray-600">
+            Plan and schedule your repurposed content across social media platforms
+          </p>
+        </div>
+
+        <ScheduleCalendar />
       </div>
     </div>
   );
 };
 
-export default Analytics;
+export default Schedule;
