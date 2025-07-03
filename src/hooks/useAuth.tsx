@@ -23,8 +23,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log('Auth provider initializing...');
+    
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session:', session);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -33,31 +36,40 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, session);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Navigate to dashboard after successful login
+        if (event === 'SIGNED_IN' && session) {
+          console.log('User signed in, navigating to dashboard');
+          navigate('/dashboard');
+        }
       }
     );
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   const signIn = async (email: string, password: string) => {
+    console.log('Attempting sign in for:', email);
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
+      console.error('Sign in error:', error);
       toast.error(error.message);
       throw error;
     }
 
     toast.success('Signed in successfully!');
-    navigate('/dashboard');
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
+    console.log('Attempting sign up for:', email);
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -65,10 +77,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         data: {
           full_name: fullName,
         },
+        emailRedirectTo: `${window.location.origin}/dashboard`,
       },
     });
 
     if (error) {
+      console.error('Sign up error:', error);
       toast.error(error.message);
       throw error;
     }
@@ -78,9 +92,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
+    console.log('Attempting sign out');
     const { error } = await supabase.auth.signOut();
     
     if (error) {
+      console.error('Sign out error:', error);
       toast.error(error.message);
       throw error;
     }
@@ -97,6 +113,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     signUp,
     signOut,
   };
+
+  console.log('Auth context value:', { user: !!user, session: !!session, loading });
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
