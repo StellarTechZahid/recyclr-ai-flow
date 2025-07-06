@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -129,7 +128,7 @@ const ContentRepurpose = () => {
 
     setIsLoading(true);
     try {
-      console.log('Starting repurpose with Mistral-7B model...');
+      console.log('Starting repurpose with Groq Llama model...');
       
       const result = await repurposeContent({
         content: selectedContent.original_content,
@@ -154,7 +153,7 @@ const ContentRepurpose = () => {
       const platform = platforms.find(p => p.id === selectedPlatform);
       await saveRepurposedContent(result.repurposedContent, platform?.name || selectedPlatform);
       
-      toast.success(`Content repurposed successfully using ${result.model || 'Mistral-7B'}!`);
+      toast.success(`Content repurposed successfully using ${result.model || 'Groq Llama'}!`);
     } catch (error: any) {
       console.error('Repurpose error:', error);
       toast.error(`Failed to repurpose content: ${error.message}`);
@@ -257,15 +256,15 @@ const ContentRepurpose = () => {
   const selectedPlatformInfo = platforms.find(p => p.id === selectedPlatform);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-brand-purple/5">
+      <header className="bg-background/80 backdrop-blur-xl border-b border-border/50 shadow-modern">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Link to="/dashboard" className="flex items-center text-gray-600 hover:text-gray-900">
+            <Link to="/dashboard" className="flex items-center text-muted-foreground hover:text-primary transition-colors duration-200">
               <ArrowLeft className="w-5 h-5 mr-2" />
               Back to Dashboard
             </Link>
-            <h1 className="text-2xl font-bold">AI Content Repurposing</h1>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary via-brand-cyan to-brand-emerald bg-clip-text text-transparent">AI Content Repurposing</h1>
           </div>
         </div>
       </header>
@@ -278,9 +277,9 @@ const ContentRepurpose = () => {
               <ContentUploadWidget onContentUploaded={fetchUserContent} />
             )}
 
-            <Card>
+            <Card className="glass-card shadow-modern">
               <CardHeader>
-                <CardTitle>Select Content to Repurpose</CardTitle>
+                <CardTitle className="text-primary">Select Content to Repurpose</CardTitle>
                 <CardDescription>
                   {availableContent.length === 0 
                     ? "Upload content above to get started" 
@@ -313,8 +312,8 @@ const ContentRepurpose = () => {
 
                     {selectedContent && (
                       <div className="space-y-2">
-                        <h4 className="font-medium">Original Content Preview:</h4>
-                        <div className="p-3 bg-gray-50 rounded-lg max-h-40 overflow-y-auto text-sm">
+                        <h4 className="font-medium text-foreground">Original Content Preview:</h4>
+                        <div className="p-3 bg-muted/50 rounded-lg max-h-40 overflow-y-auto text-sm text-muted-foreground">
                           {selectedContent.original_content.substring(0, 500)}
                           {selectedContent.original_content.length > 500 && '...'}
                         </div>
@@ -322,8 +321,8 @@ const ContentRepurpose = () => {
                     )}
                   </>
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <div className="text-center py-8 text-muted-foreground">
+                    <FileText className="w-12 h-12 mx-auto mb-4 text-muted/50" />
                     <p>No content available</p>
                     <p className="text-sm">Upload your first piece of content above to start repurposing!</p>
                   </div>
@@ -331,14 +330,14 @@ const ContentRepurpose = () => {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="glass-card shadow-modern">
               <CardHeader>
-                <CardTitle>Repurposing Settings</CardTitle>
+                <CardTitle className="text-primary">Repurposing Settings</CardTitle>
                 <CardDescription>Choose your target platform and style</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Target Platform</label>
+                  <label className="text-sm font-medium text-foreground">Target Platform</label>
                   <Select value={selectedPlatform} onValueChange={setSelectedPlatform}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select platform" />
@@ -348,21 +347,21 @@ const ContentRepurpose = () => {
                         <SelectItem key={platform.id} value={platform.id}>
                           <div>
                             <div className="font-medium">{platform.name}</div>
-                            <div className="text-xs text-gray-500">{platform.description}</div>
+                            <div className="text-xs text-muted-foreground">{platform.description}</div>
                           </div>
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                   {selectedPlatformInfo && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       Max length: {selectedPlatformInfo.maxLength} characters
                     </p>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Tone</label>
+                  <label className="text-sm font-medium text-foreground">Tone</label>
                   <Select value={selectedTone} onValueChange={setSelectedTone}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select tone" />
@@ -372,7 +371,7 @@ const ContentRepurpose = () => {
                         <SelectItem key={tone.id} value={tone.id}>
                           <div>
                             <div className="font-medium">{tone.name}</div>
-                            <div className="text-xs text-gray-500">{tone.description}</div>
+                            <div className="text-xs text-muted-foreground">{tone.description}</div>
                           </div>
                         </SelectItem>
                       ))}
@@ -382,13 +381,13 @@ const ContentRepurpose = () => {
 
                 <Button 
                   onClick={handleRepurpose} 
-                  className="w-full" 
+                  className="w-full bg-gradient-to-r from-primary via-brand-cyan to-brand-emerald text-primary-foreground hover:shadow-glow transition-all duration-300" 
                   disabled={!selectedContent || !selectedPlatform || isLoading}
                 >
                   {isLoading ? (
                     <>
                       <Wand2 className="w-4 h-4 mr-2 animate-spin" />
-                      Repurposing with Mistral-7B...
+                      Repurposing with Groq Llama...
                     </>
                   ) : (
                     <>
@@ -403,10 +402,10 @@ const ContentRepurpose = () => {
 
           {/* Output Section */}
           <div className="space-y-6">
-            <Card>
+            <Card className="glass-card shadow-modern">
               <CardHeader>
-                <CardTitle>Repurposed Content</CardTitle>
-                <CardDescription>AI-generated content using Mistral-7B model</CardDescription>
+                <CardTitle className="text-primary">Repurposed Content</CardTitle>
+                <CardDescription>AI-generated content using Groq Llama model</CardDescription>
               </CardHeader>
               <CardContent>
                 {repurposedContent ? (
@@ -419,37 +418,42 @@ const ContentRepurpose = () => {
                           updateUrlParams({ repurposed: e.target.value });
                         }}
                         rows={12}
-                        className="resize-none"
+                        className="resize-none bg-background/50 border-border/50 focus:border-primary"
                         placeholder="Repurposed content will appear here..."
                       />
-                      <div className="absolute bottom-2 right-2 text-xs text-gray-500">
+                      <div className="absolute bottom-2 right-2 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded">
                         {repurposedContent.length}
                         {selectedPlatformInfo && `/${selectedPlatformInfo.maxLength}`} characters
                       </div>
                     </div>
 
                     <div className="flex flex-wrap gap-2">
-                      <Button variant="outline" size="sm" onClick={copyToClipboard}>
+                      <Button variant="outline" size="sm" onClick={copyToClipboard} className="hover:bg-primary/10">
                         <Copy className="w-4 h-4 mr-2" />
                         Copy
                       </Button>
-                      <Button variant="outline" size="sm" onClick={downloadContent}>
+                      <Button variant="outline" size="sm" onClick={downloadContent} className="hover:bg-primary/10">
                         <Download className="w-4 h-4 mr-2" />
                         Download
                       </Button>
-                      <Button variant="outline" size="sm" onClick={shareContent}>
+                      <Button variant="outline" size="sm" onClick={shareContent} className="hover:bg-primary/10">
                         <Share className="w-4 h-4 mr-2" />
                         Share
                       </Button>
-                      <Button variant="default" size="sm" onClick={scheduleRepurposedContent}>
+                      <Button 
+                        variant="default" 
+                        size="sm" 
+                        onClick={scheduleRepurposedContent}
+                        className="bg-gradient-to-r from-brand-cyan to-brand-emerald text-white hover:shadow-glow-lg"
+                      >
                         <Calendar className="w-4 h-4 mr-2" />
                         Schedule Post
                       </Button>
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-12 text-gray-500">
-                    <Wand2 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Wand2 className="w-12 h-12 mx-auto mb-4 text-muted/50" />
                     <p>Select content and platform, then click "Repurpose Content" to get started!</p>
                   </div>
                 )}
@@ -457,16 +461,16 @@ const ContentRepurpose = () => {
             </Card>
 
             {suggestions.length > 0 && (
-              <Card>
+              <Card className="glass-card shadow-modern">
                 <CardHeader>
-                  <CardTitle>AI Suggestions</CardTitle>
+                  <CardTitle className="text-primary">AI Suggestions</CardTitle>
                   <CardDescription>Tips to improve your content</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
                     {suggestions.map((suggestion, index) => (
-                      <li key={index} className="text-sm text-gray-600 flex items-start">
-                        <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <li key={index} className="text-sm text-muted-foreground flex items-start">
+                        <span className="w-2 h-2 bg-primary rounded-full mt-2 mr-3 flex-shrink-0"></span>
                         {suggestion}
                       </li>
                     ))}

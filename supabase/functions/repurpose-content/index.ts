@@ -2,7 +2,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const huggingFaceToken = Deno.env.get('HUGGING_FACE_ACCESS_TOKEN');
+const groqApiKey = Deno.env.get('GROQ_API_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -17,14 +17,14 @@ serve(async (req) => {
   try {
     console.log('Repurpose content function called');
     
-    if (!huggingFaceToken) {
-      console.error('Missing HUGGING_FACE_ACCESS_TOKEN');
-      throw new Error('Hugging Face API token not configured');
+    if (!groqApiKey) {
+      console.error('Missing GROQ_API_KEY');
+      throw new Error('Groq API key not configured');
     }
 
     const { content, platform, contentType, tone } = await req.json();
     
-    console.log('Using Hugging Face model: mistralai/Mistral-7B-Instruct-v0.1');
+    console.log('Using Groq model: meta-llama/llama-4-scout-17b-16e-instruct');
     console.log('Request params:', { 
       contentLength: content?.length, 
       platform, 
@@ -41,45 +41,39 @@ serve(async (req) => {
     console.log('Generated prompt:', prompt.substring(0, 200) + '...');
     
     const response = await fetch(
-      'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1',
+      'https://api.groq.com/openai/v1/chat/completions',
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${huggingFaceToken}`,
+          'Authorization': `Bearer ${groqApiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          inputs: prompt,
-          parameters: {
-            max_new_tokens: 512,
-            temperature: 0.7,
-            top_p: 0.9,
-            do_sample: true,
-            return_full_text: false,
-          },
+          model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.7,
+          max_tokens: 512,
         }),
       }
     );
 
-    console.log('Hugging Face API response status:', response.status);
+    console.log('Groq API response status:', response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Hugging Face API error:', response.status, errorText);
-      throw new Error(`Hugging Face API error: ${response.status} - ${errorText}`);
+      console.error('Groq API error:', response.status, errorText);
+      throw new Error(`Groq API error: ${response.status} - ${errorText}`);
     }
 
     const result = await response.json();
-    console.log('Hugging Face response:', result);
+    console.log('Groq response:', result);
 
     let repurposedContent = '';
-    if (Array.isArray(result) && result[0]?.generated_text) {
-      repurposedContent = result[0].generated_text.trim();
-    } else if (result.generated_text) {
-      repurposedContent = result.generated_text.trim();
+    if (result.choices && result.choices[0]?.message?.content) {
+      repurposedContent = result.choices[0].message.content.trim();
     } else {
       console.error('Unexpected response format:', result);
-      throw new Error('Unexpected response format from Hugging Face API');
+      throw new Error('Unexpected response format from Groq API');
     }
 
     // Clean up the response - remove the prompt if it's included
@@ -93,7 +87,7 @@ serve(async (req) => {
     const finalResponse = {
       repurposedContent,
       suggestions,
-      model: 'mistralai/Mistral-7B-Instruct-v0.1'
+      model: 'meta-llama/llama-4-scout-17b-16e-instruct'
     };
 
     console.log('Final response:', finalResponse);
@@ -106,7 +100,7 @@ serve(async (req) => {
     console.error('Error in repurpose-content function:', error);
     return new Response(JSON.stringify({ 
       error: error.message || 'Failed to repurpose content',
-      model: 'mistralai/Mistral-7B-Instruct-v0.1'
+      model: 'meta-llama/llama-4-scout-17b-16e-instruct'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -132,11 +126,11 @@ function createRepurposePrompt(content: string, platform: string, contentType: s
     educational: 'Focus on teaching and explaining'
   };
 
-  return `<s>[INST] Transform the following ${contentType} content for ${platform}. ${platformInstructions[platform] || 'Optimize for the platform'}. Tone: ${toneInstructions[tone] || 'professional'}.
+  return `Transform the following ${contentType} content for ${platform}. ${platformInstructions[platform] || 'Optimize for the platform'}. Tone: ${toneInstructions[tone] || 'professional'}.
 
 Original content: ${content}
 
-Create the repurposed content now: [/INST]`;
+Create the repurposed content now:`;
 }
 
 function generateSuggestions(platform: string, contentType: string): string[] {
