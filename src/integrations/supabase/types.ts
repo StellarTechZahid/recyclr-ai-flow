@@ -112,6 +112,54 @@ export type Database = {
         }
         Relationships: []
       }
+      post_analytics: {
+        Row: {
+          clicks: number | null
+          comments: number | null
+          created_at: string
+          engagement_rate: number | null
+          id: string
+          likes: number | null
+          platform: string
+          post_id: string
+          recorded_at: string
+          shares: number | null
+          updated_at: string
+          user_id: string
+          views: number | null
+        }
+        Insert: {
+          clicks?: number | null
+          comments?: number | null
+          created_at?: string
+          engagement_rate?: number | null
+          id?: string
+          likes?: number | null
+          platform: string
+          post_id: string
+          recorded_at?: string
+          shares?: number | null
+          updated_at?: string
+          user_id: string
+          views?: number | null
+        }
+        Update: {
+          clicks?: number | null
+          comments?: number | null
+          created_at?: string
+          engagement_rate?: number | null
+          id?: string
+          likes?: number | null
+          platform?: string
+          post_id?: string
+          recorded_at?: string
+          shares?: number | null
+          updated_at?: string
+          user_id?: string
+          views?: number | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -237,7 +285,21 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      user_analytics_summary: {
+        Row: {
+          avg_engagement_rate: number | null
+          date: string | null
+          platform: string | null
+          total_clicks: number | null
+          total_comments: number | null
+          total_likes: number | null
+          total_posts: number | null
+          total_shares: number | null
+          total_views: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
