@@ -69,8 +69,10 @@ export default {
 				},
 				brand: {
 					purple: 'hsl(var(--brand-purple))',
-					cyan: 'hsl(var(--brand-cyan))',
-					emerald: 'hsl(var(--brand-emerald))',
+					'purple-dark': 'hsl(var(--brand-purple-dark))',
+					black: 'hsl(var(--brand-black))',
+					gray: 'hsl(var(--brand-gray))',
+					glow: 'hsl(var(--accent-glow))',
 				}
 			},
 			borderRadius: {
