@@ -16,6 +16,34 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Input validation helpers
+const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const validatePassword = (password: string): { isValid: boolean; message?: string } => {
+  if (password.length < 8) {
+    return { isValid: false, message: 'Password must be at least 8 characters long' };
+  }
+  if (!/(?=.*[a-z])/.test(password)) {
+    return { isValid: false, message: 'Password must contain at least one lowercase letter' };
+  }
+  if (!/(?=.*[A-Z])/.test(password)) {
+    return { isValid: false, message: 'Password must contain at least one uppercase letter' };
+  }
+  if (!/(?=.*\d)/.test(password)) {
+    return { isValid: false, message: 'Password must contain at least one number' };
+  }
+  return { isValid: true };
+};
+
+const sanitizeUserData = (data: any) => {
+  // Remove sensitive fields from logging
+  const { password, ...sanitizedData } = data || {};
+  return sanitizedData;
+};
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -23,27 +51,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log('Auth provider initializing...');
-    
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session:', session);
-      setSession(session);
-      setUser(session?.user ?? null);
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error('Auth session error:', error.message);
+        toast.error('Authentication error occurred');
+      } else {
+        setSession(session);
+        setUser(session?.user ?? null);
+      }
       setLoading(false);
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
         
         // Navigate to dashboard after successful login
         if (event === 'SIGNED_IN' && session) {
-          console.log('User signed in, navigating to dashboard');
           navigate('/dashboard');
         }
       }
@@ -53,56 +81,110 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [navigate]);
 
   const signIn = async (email: string, password: string) => {
-    console.log('Attempting sign in for:', email);
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      console.error('Sign in error:', error);
+    // Input validation
+    if (!validateEmail(email)) {
+      const error = new Error('Please enter a valid email address');
       toast.error(error.message);
       throw error;
     }
 
-    toast.success('Signed in successfully!');
+    if (!password || password.length < 6) {
+      const error = new Error('Password must be at least 6 characters long');
+      toast.error(error.message);
+      throw error;
+    }
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+
+      if (error) {
+        // Don't expose internal error details
+        const userFriendlyMessage = error.message.includes('Invalid login credentials') 
+          ? 'Invalid email or password'
+          : 'Login failed. Please try again.';
+        
+        toast.error(userFriendlyMessage);
+        throw new Error(userFriendlyMessage);
+      }
+
+      toast.success('Signed in successfully!');
+    } catch (error) {
+      // Ensure we don't log sensitive information
+      console.error('Sign in error occurred');
+      throw error;
+    }
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    console.log('Attempting sign up for:', email);
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-        },
-        emailRedirectTo: `${window.location.origin}/dashboard`,
-      },
-    });
-
-    if (error) {
-      console.error('Sign up error:', error);
+    // Input validation
+    if (!validateEmail(email)) {
+      const error = new Error('Please enter a valid email address');
       toast.error(error.message);
       throw error;
     }
 
-    toast.success('Account created successfully! Please check your email to verify your account.');
-    navigate('/auth/login');
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      const error = new Error(passwordValidation.message || 'Invalid password');
+      toast.error(error.message);
+      throw error;
+    }
+
+    if (!fullName || fullName.trim().length < 2) {
+      const error = new Error('Please enter your full name');
+      toast.error(error.message);
+      throw error;
+    }
+
+    try {
+      const { error } = await supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
+        password,
+        options: {
+          data: {
+            full_name: fullName.trim(),
+          },
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+
+      if (error) {
+        // Don't expose internal error details
+        const userFriendlyMessage = error.message.includes('already registered')
+          ? 'An account with this email already exists'
+          : 'Registration failed. Please try again.';
+        
+        toast.error(userFriendlyMessage);
+        throw new Error(userFriendlyMessage);
+      }
+
+      toast.success('Account created successfully! Please check your email to verify your account.');
+      navigate('/auth/login');
+    } catch (error) {
+      // Ensure we don't log sensitive information
+      console.error('Sign up error occurred');
+      throw error;
+    }
   };
 
   const signOut = async () => {
-    console.log('Attempting sign out');
-    const { error } = await supabase.auth.signOut();
-    
-    if (error) {
-      console.error('Sign out error:', error);
-      toast.error(error.message);
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        toast.error('Sign out failed. Please try again.');
+        throw error;
+      }
+
+      toast.success('Signed out successfully!');
+      navigate('/');
+    } catch (error) {
+      console.error('Sign out error occurred');
       throw error;
     }
-
-    toast.success('Signed out successfully!');
-    navigate('/');
   };
 
   const value = {
@@ -113,8 +195,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     signUp,
     signOut,
   };
-
-  console.log('Auth context value:', { user: !!user, session: !!session, loading });
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
