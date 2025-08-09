@@ -64,7 +64,7 @@ export function useRealAnalytics(timeRange: string = '30') {
       setLoading(true);
       console.log('Loading real analytics data...');
 
-      const daysAgo = parseInt(timeRange);
+      const daysAgo = Number(timeRange) || 30;
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - daysAgo);
 
@@ -110,14 +110,14 @@ export function useRealAnalytics(timeRange: string = '30') {
   };
 
   const calculateRealMetrics = (analytics: any[], posts: any[]): RealTimeMetrics => {
-    const totalViews = analytics.reduce((sum, item) => sum + (item.views || 0), 0);
-    const totalLikes = analytics.reduce((sum, item) => sum + (item.likes || 0), 0);
-    const totalShares = analytics.reduce((sum, item) => sum + (item.shares || 0), 0);
-    const totalComments = analytics.reduce((sum, item) => sum + (item.comments || 0), 0);
+    const totalViews = analytics.reduce((sum, item) => sum + (Number(item.views) || 0), 0);
+    const totalLikes = analytics.reduce((sum, item) => sum + (Number(item.likes) || 0), 0);
+    const totalShares = analytics.reduce((sum, item) => sum + (Number(item.shares) || 0), 0);
+    const totalComments = analytics.reduce((sum, item) => sum + (Number(item.comments) || 0), 0);
     const totalEngagement = totalLikes + totalShares + totalComments;
 
     const avgEngagementRate = analytics.length > 0 
-      ? analytics.reduce((sum, item) => sum + (item.engagement_rate || 0), 0) / analytics.length
+      ? analytics.reduce((sum, item) => sum + (Number(item.engagement_rate) || 0), 0) / analytics.length
       : 0;
 
     // Calculate platform distribution
@@ -127,17 +127,18 @@ export function useRealAnalytics(timeRange: string = '30') {
     }, {} as Record<string, number>);
 
     const topPlatform = Object.entries(platformCounts)
-      .sort(([,a], [,b]) => b - a)[0]?.[0] || 'twitter';
+      .sort(([,a], [,b]) => (b as number) - (a as number))[0]?.[0] || 'twitter';
 
     // Calculate growth (compare with previous period)
+    const analyticsLength = analytics.length;
     const midPoint = new Date();
-    midPoint.setDate(midPoint.getDate() - parseInt(String(analytics.length / 2)));
+    midPoint.setDate(midPoint.getDate() - Math.floor(analyticsLength / 2));
     
     const recentData = analytics.filter(item => new Date(item.recorded_at) >= midPoint);
     const olderData = analytics.filter(item => new Date(item.recorded_at) < midPoint);
     
-    const recentEngagement = recentData.reduce((sum, item) => sum + (item.engagement_rate || 0), 0);
-    const olderEngagement = olderData.reduce((sum, item) => sum + (item.engagement_rate || 0), 0);
+    const recentEngagement = recentData.reduce((sum, item) => sum + (Number(item.engagement_rate) || 0), 0);
+    const olderEngagement = olderData.reduce((sum, item) => sum + (Number(item.engagement_rate) || 0), 0);
     
     const weeklyGrowth = olderEngagement > 0 
       ? Math.round(((recentEngagement - olderEngagement) / olderEngagement) * 100)
@@ -158,12 +159,12 @@ export function useRealAnalytics(timeRange: string = '30') {
   const processContentPerformance = (analytics: any[], posts: any[]): ContentPerformance[] => {
     return posts.slice(0, 10).map(post => {
       const postAnalytics = analytics.find(item => item.post_id === post.id);
-      const views = postAnalytics?.views || 0;
-      const likes = postAnalytics?.likes || 0;
-      const shares = postAnalytics?.shares || 0;
-      const comments = postAnalytics?.comments || 0;
-      const clicks = postAnalytics?.clicks || 0;
-      const engagementRate = postAnalytics?.engagement_rate || 0;
+      const views = Number(postAnalytics?.views) || 0;
+      const likes = Number(postAnalytics?.likes) || 0;
+      const shares = Number(postAnalytics?.shares) || 0;
+      const comments = Number(postAnalytics?.comments) || 0;
+      const clicks = Number(postAnalytics?.clicks) || 0;
+      const engagementRate = Number(postAnalytics?.engagement_rate) || 0;
 
       let performance: 'excellent' | 'good' | 'average' | 'poor' = 'poor';
       if (engagementRate >= 8) performance = 'excellent';
@@ -196,12 +197,12 @@ export function useRealAnalytics(timeRange: string = '30') {
         platformPosts.some(post => post.id === item.post_id)
       );
 
-      const totalViews = platformAnalytics.reduce((sum, item) => sum + (item.views || 0), 0);
+      const totalViews = platformAnalytics.reduce((sum, item) => sum + (Number(item.views) || 0), 0);
       const totalEngagement = platformAnalytics.reduce((sum, item) => 
-        sum + (item.likes || 0) + (item.shares || 0) + (item.comments || 0), 0
+        sum + (Number(item.likes) || 0) + (Number(item.shares) || 0) + (Number(item.comments) || 0), 0
       );
       const avgEngagementRate = platformAnalytics.length > 0
-        ? platformAnalytics.reduce((sum, item) => sum + (item.engagement_rate || 0), 0) / platformAnalytics.length
+        ? platformAnalytics.reduce((sum, item) => sum + (Number(item.engagement_rate) || 0), 0) / platformAnalytics.length
         : 0;
 
       return {
