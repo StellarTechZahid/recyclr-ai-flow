@@ -1,1 +1,58 @@
 project_id = "wtjgswjapvrnrckcnwer"
+
+[functions.repurpose-content]
+verify_jwt = false
+
+[functions.schedule-posts]
+verify_jwt = false
+
+[functions.auto-publish-posts]
+verify_jwt = false
+
+[functions.ai-vision]
+verify_jwt = false
+
+[functions.ai-speech-to-text]
+verify_jwt = false
+
+[functions.ai-text-to-speech]
+verify_jwt = false
+
+[functions.ai-reasoning]
+verify_jwt = false
+
+[functions.ai-content-moderation]
+verify_jwt = false
+
+[functions.ai-multilingual]
+verify_jwt = false
+
+[functions.ai-trend-mining]
+verify_jwt = false
+
+[functions.ai-brand-voice]
+verify_jwt = false
+
+[functions.ai-smart-campaign]
+verify_jwt = false
+
+[functions.ai-audience-persona]
+verify_jwt = false
+
+[functions.ai-auto-reply]
+verify_jwt = false
+
+[functions.ai-emotion-optimizer]
+verify_jwt = false
+
+[functions.ai-viral-hooks]
+verify_jwt = false
+
+[functions.ai-influencer-collab]
+verify_jwt = false
+
+[functions.ai-content-monetizer]
+verify_jwt = false
+
+[functions.ai-accessibility]
+verify_jwt = false
