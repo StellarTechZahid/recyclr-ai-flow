@@ -14,6 +14,204 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_generated_content: {
+        Row: {
+          ai_model: string | null
+          content_type: string
+          created_at: string
+          generated_output: string
+          id: string
+          is_saved: boolean | null
+          metadata: Json | null
+          original_input: string | null
+          platform: string | null
+          rating: number | null
+          user_id: string
+        }
+        Insert: {
+          ai_model?: string | null
+          content_type: string
+          created_at?: string
+          generated_output: string
+          id?: string
+          is_saved?: boolean | null
+          metadata?: Json | null
+          original_input?: string | null
+          platform?: string | null
+          rating?: number | null
+          user_id: string
+        }
+        Update: {
+          ai_model?: string | null
+          content_type?: string
+          created_at?: string
+          generated_output?: string
+          id?: string
+          is_saved?: boolean | null
+          metadata?: Json | null
+          original_input?: string | null
+          platform?: string | null
+          rating?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      audience_personas: {
+        Row: {
+          content_preferences: Json | null
+          created_at: string
+          demographics: Json | null
+          description: string | null
+          id: string
+          interests: string[] | null
+          is_primary: boolean | null
+          name: string
+          pain_points: string[] | null
+          preferred_platforms: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content_preferences?: Json | null
+          created_at?: string
+          demographics?: Json | null
+          description?: string | null
+          id?: string
+          interests?: string[] | null
+          is_primary?: boolean | null
+          name: string
+          pain_points?: string[] | null
+          preferred_platforms?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content_preferences?: Json | null
+          created_at?: string
+          demographics?: Json | null
+          description?: string | null
+          id?: string
+          interests?: string[] | null
+          is_primary?: boolean | null
+          name?: string
+          pain_points?: string[] | null
+          preferred_platforms?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      brand_voice_profiles: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          sample_content: string[] | null
+          tone: string[] | null
+          updated_at: string
+          user_id: string
+          vocabulary: Json | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          sample_content?: string[] | null
+          tone?: string[] | null
+          updated_at?: string
+          user_id: string
+          vocabulary?: Json | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          sample_content?: string[] | null
+          tone?: string[] | null
+          updated_at?: string
+          user_id?: string
+          vocabulary?: Json | null
+        }
+        Relationships: []
+      }
+      campaigns: {
+        Row: {
+          audience_persona_id: string | null
+          brand_voice_id: string | null
+          content_pieces: Json | null
+          created_at: string
+          description: string | null
+          end_date: string | null
+          goal: string | null
+          id: string
+          metrics: Json | null
+          name: string
+          schedule: Json | null
+          start_date: string | null
+          status: string | null
+          target_platforms: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          audience_persona_id?: string | null
+          brand_voice_id?: string | null
+          content_pieces?: Json | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          goal?: string | null
+          id?: string
+          metrics?: Json | null
+          name: string
+          schedule?: Json | null
+          start_date?: string | null
+          status?: string | null
+          target_platforms?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          audience_persona_id?: string | null
+          brand_voice_id?: string | null
+          content_pieces?: Json | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          goal?: string | null
+          id?: string
+          metrics?: Json | null
+          name?: string
+          schedule?: Json | null
+          start_date?: string | null
+          status?: string | null
+          target_platforms?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_audience_persona_id_fkey"
+            columns: ["audience_persona_id"]
+            isOneToOne: false
+            referencedRelation: "audience_personas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaigns_brand_voice_id_fkey"
+            columns: ["brand_voice_id"]
+            isOneToOne: false
+            referencedRelation: "brand_voice_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content: {
         Row: {
           content_type: string
@@ -108,6 +306,57 @@ export type Database = {
           template_content?: string
           updated_at?: string | null
           usage_count?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      influencer_matches: {
+        Row: {
+          collaboration_ideas: string[] | null
+          contact_info: Json | null
+          created_at: string
+          engagement_rate: number | null
+          follower_count: number | null
+          id: string
+          influencer_name: string
+          match_score: number | null
+          niche: string[] | null
+          notes: string | null
+          platform: string
+          status: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          collaboration_ideas?: string[] | null
+          contact_info?: Json | null
+          created_at?: string
+          engagement_rate?: number | null
+          follower_count?: number | null
+          id?: string
+          influencer_name: string
+          match_score?: number | null
+          niche?: string[] | null
+          notes?: string | null
+          platform: string
+          status?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          collaboration_ideas?: string[] | null
+          contact_info?: Json | null
+          created_at?: string
+          engagement_rate?: number | null
+          follower_count?: number | null
+          id?: string
+          influencer_name?: string
+          match_score?: number | null
+          niche?: string[] | null
+          notes?: string | null
+          platform?: string
+          status?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -328,6 +577,51 @@ export type Database = {
           trial_end?: string | null
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      trend_data: {
+        Row: {
+          created_at: string
+          description: string | null
+          expires_at: string | null
+          id: string
+          platform: string
+          related_hashtags: string[] | null
+          relevance_score: number | null
+          suggested_content: string[] | null
+          trend_name: string
+          trend_type: string
+          user_id: string
+          volume_data: Json | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          platform: string
+          related_hashtags?: string[] | null
+          relevance_score?: number | null
+          suggested_content?: string[] | null
+          trend_name: string
+          trend_type: string
+          user_id: string
+          volume_data?: Json | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          platform?: string
+          related_hashtags?: string[] | null
+          relevance_score?: number | null
+          suggested_content?: string[] | null
+          trend_name?: string
+          trend_type?: string
+          user_id?: string
+          volume_data?: Json | null
         }
         Relationships: []
       }
