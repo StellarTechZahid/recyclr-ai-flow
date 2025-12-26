@@ -19,6 +19,12 @@ import Schedule from "./pages/Schedule";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/auth/ResetPassword";
+import AITools from "./pages/AITools";
+import BrandVoice from "./pages/ai/BrandVoice";
+import TrendMining from "./pages/ai/TrendMining";
+import SmartCampaign from "./pages/ai/SmartCampaign";
+import AudiencePersona from "./pages/ai/AudiencePersona";
+import ViralHooks from "./pages/ai/ViralHooks";
 
 const queryClient = new QueryClient();
 
@@ -91,6 +97,36 @@ const App = () => (
           <Route path="/dashboard/analytics" element={
             <ProtectedRoute>
               <Analytics />
+            </ProtectedRoute>
+          } />
+          <Route path="/ai" element={
+            <ProtectedRoute>
+              <AITools />
+            </ProtectedRoute>
+          } />
+          <Route path="/ai/brand-voice" element={
+            <ProtectedRoute>
+              <BrandVoice />
+            </ProtectedRoute>
+          } />
+          <Route path="/ai/trends" element={
+            <ProtectedRoute>
+              <TrendMining />
+            </ProtectedRoute>
+          } />
+          <Route path="/ai/campaigns" element={
+            <ProtectedRoute>
+              <SmartCampaign />
+            </ProtectedRoute>
+          } />
+          <Route path="/ai/personas" element={
+            <ProtectedRoute>
+              <AudiencePersona />
+            </ProtectedRoute>
+          } />
+          <Route path="/ai/hooks" element={
+            <ProtectedRoute>
+              <ViralHooks />
             </ProtectedRoute>
           } />
           <Route path="*" element={<NotFound />} />
