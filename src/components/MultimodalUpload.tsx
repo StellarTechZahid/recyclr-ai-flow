@@ -85,8 +85,8 @@ const MultimodalUpload = ({
 
       mediaRecorderRef.current.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        const file = new File([blob], `recording-${Date.now()}.webm`, { type: 'audio/webm' });
-        setFiles(prev => [...prev, file]);
+        const audioFile = new window.File([blob], `recording-${Date.now()}.webm`, { type: 'audio/webm' });
+        setFiles(prev => [...prev, audioFile]);
         stream.getTracks().forEach(track => track.stop());
       };
 
