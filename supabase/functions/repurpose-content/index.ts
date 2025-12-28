@@ -1,6 +1,6 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
 const groqApiKey = Deno.env.get('GROQ_API_KEY');
 
@@ -15,7 +15,32 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Repurpose content function called');
+    // Authenticate the request
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      console.error('Missing authorization header');
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      console.error('Auth error:', authError?.message);
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log('Repurpose content function called by user:', user.id);
     
     if (!groqApiKey) {
       console.error('Missing GROQ_API_KEY');
@@ -109,7 +134,7 @@ serve(async (req) => {
 });
 
 function createRepurposePrompt(content: string, platform: string, contentType: string, tone: string): string {
-  const platformInstructions = {
+  const platformInstructions: Record<string, string> = {
     twitter: 'Create engaging Twitter posts (max 280 chars per tweet). Use emojis and hashtags.',
     linkedin: 'Create a professional LinkedIn post (max 3000 chars). Include insights and relevant hashtags.',
     instagram: 'Create an Instagram caption (max 2200 chars). Use storytelling, emojis, and hashtags.',
@@ -118,7 +143,7 @@ function createRepurposePrompt(content: string, platform: string, contentType: s
     blog: 'Create a blog post outline with key points and structure.'
   };
 
-  const toneInstructions = {
+  const toneInstructions: Record<string, string> = {
     professional: 'Use formal, business-appropriate language',
     casual: 'Use friendly, conversational tone',
     humorous: 'Add light humor and wit',
