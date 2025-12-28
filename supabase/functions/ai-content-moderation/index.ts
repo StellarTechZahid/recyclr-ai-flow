@@ -12,9 +12,9 @@ serve(async (req) => {
   }
 
   try {
-    const apiKey = Deno.env.get('GROQ_LLAMA_GUARD_KEY');
+    const apiKey = Deno.env.get('LOVABLE_API_KEY');
     if (!apiKey) {
-      throw new Error('GROQ_LLAMA_GUARD_KEY not configured');
+      throw new Error('LOVABLE_API_KEY not configured');
     }
 
     const { content, checkBrandSafety } = await req.json();
@@ -37,21 +37,21 @@ Respond with a JSON object containing:
 - brandSafe: boolean (true if brand safe)
 - recommendations: array of strings (how to improve)
 - confidence: number (0-1, your confidence level)`
-      : `You are a content safety moderator using Llama Guard. Analyze the content for safety issues.
+      : `You are a content safety moderator. Analyze the content for safety issues.
 
 Respond with a JSON object:
 - safe: boolean
 - category: string (if unsafe, the category)
 - explanation: string`;
 
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-guard-3-8b',
+        model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `Analyze this content: ${content}` }
@@ -64,6 +64,14 @@ Respond with a JSON object:
     if (!response.ok) {
       const error = await response.text();
       console.error('Moderation API error:', error);
+      
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
       throw new Error(`Moderation API error: ${response.status}`);
     }
 
@@ -88,7 +96,7 @@ Respond with a JSON object:
 
     return new Response(JSON.stringify({
       ...parsed,
-      model: 'llama-guard-3-8b'
+      model: 'google/gemini-2.5-flash'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

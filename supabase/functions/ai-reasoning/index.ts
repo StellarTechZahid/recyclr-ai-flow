@@ -40,35 +40,16 @@ serve(async (req) => {
 
     console.log('AI Reasoning called by user:', user.id);
 
+    const apiKey = Deno.env.get('LOVABLE_API_KEY');
+    if (!apiKey) {
+      throw new Error('LOVABLE_API_KEY not configured');
+    }
+
     const { prompt, systemPrompt, model, temperature, maxTokens, tools } = await req.json();
 
-    // Select API key based on model
-    const modelType = model || 'gpt-oss-120b';
-    let apiKey: string | undefined;
-    let modelName: string;
-
-    switch (modelType) {
-      case 'gpt-oss-20b':
-        apiKey = Deno.env.get('GROQ_GPT_OSS_20B_KEY');
-        modelName = 'gpt-oss-20b';
-        break;
-      case 'kimi-k2':
-        apiKey = Deno.env.get('GROQ_KIMI_K2_KEY');
-        modelName = 'kimi-k2';
-        break;
-      case 'llama-3.3-70b':
-        apiKey = Deno.env.get('GROQ_LLAMA_3_3_70B_KEY');
-        modelName = 'llama-3.3-70b-versatile';
-        break;
-      default:
-        apiKey = Deno.env.get('GROQ_GPT_OSS_120B_KEY');
-        modelName = 'gpt-oss-120b';
-    }
-
-    if (!apiKey) {
-      throw new Error(`API key not configured for model: ${modelType}`);
-    }
-
+    // Use Lovable AI Gateway with gemini-2.5-flash as default
+    const modelName = model === 'advanced' ? 'google/gemini-2.5-pro' : 'google/gemini-2.5-flash';
+    
     console.log('AI Reasoning called with model:', modelName);
 
     const messages = [];
@@ -90,7 +71,7 @@ serve(async (req) => {
       requestBody.tool_choice = 'auto';
     }
 
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -102,6 +83,20 @@ serve(async (req) => {
     if (!response.ok) {
       const error = await response.text();
       console.error('Reasoning API error:', error);
+      
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      if (response.status === 402) {
+        return new Response(JSON.stringify({ error: 'Payment required. Please add credits to your workspace.' }), {
+          status: 402,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
       throw new Error(`Reasoning API error: ${response.status}`);
     }
 

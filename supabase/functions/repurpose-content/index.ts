@@ -2,8 +2,6 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
-const groqApiKey = Deno.env.get('GROQ_API_KEY');
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -42,14 +40,15 @@ serve(async (req) => {
 
     console.log('Repurpose content function called by user:', user.id);
     
-    if (!groqApiKey) {
-      console.error('Missing GROQ_API_KEY');
-      throw new Error('Groq API key not configured');
+    const apiKey = Deno.env.get('LOVABLE_API_KEY');
+    if (!apiKey) {
+      console.error('Missing LOVABLE_API_KEY');
+      throw new Error('LOVABLE_API_KEY not configured');
     }
 
     const { content, platform, contentType, tone } = await req.json();
     
-    console.log('Using Groq model: meta-llama/llama-4-scout-17b-16e-instruct');
+    console.log('Using Lovable AI Gateway with model: google/gemini-2.5-flash');
     console.log('Request params:', { 
       contentLength: content?.length, 
       platform, 
@@ -65,40 +64,45 @@ serve(async (req) => {
     const prompt = createRepurposePrompt(content, platform, contentType, tone);
     console.log('Generated prompt:', prompt.substring(0, 200) + '...');
     
-    const response = await fetch(
-      'https://api.groq.com/openai/v1/chat/completions',
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${groqApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-          messages: [{ role: 'user', content: prompt }],
-          temperature: 0.7,
-          max_tokens: 512,
-        }),
-      }
-    );
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.7,
+        max_tokens: 512,
+      }),
+    });
 
-    console.log('Groq API response status:', response.status);
+    console.log('Lovable AI response status:', response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Groq API error:', response.status, errorText);
-      throw new Error(`Groq API error: ${response.status} - ${errorText}`);
+      console.error('Lovable AI error:', response.status, errorText);
+      
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      throw new Error(`Lovable AI error: ${response.status} - ${errorText}`);
     }
 
     const result = await response.json();
-    console.log('Groq response:', result);
+    console.log('Lovable AI response received');
 
     let repurposedContent = '';
     if (result.choices && result.choices[0]?.message?.content) {
       repurposedContent = result.choices[0].message.content.trim();
     } else {
       console.error('Unexpected response format:', result);
-      throw new Error('Unexpected response format from Groq API');
+      throw new Error('Unexpected response format from Lovable AI');
     }
 
     // Clean up the response - remove the prompt if it's included
@@ -112,10 +116,10 @@ serve(async (req) => {
     const finalResponse = {
       repurposedContent,
       suggestions,
-      model: 'meta-llama/llama-4-scout-17b-16e-instruct'
+      model: 'google/gemini-2.5-flash'
     };
 
-    console.log('Final response:', finalResponse);
+    console.log('Final response prepared');
 
     return new Response(JSON.stringify(finalResponse), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -125,7 +129,7 @@ serve(async (req) => {
     console.error('Error in repurpose-content function:', error);
     return new Response(JSON.stringify({ 
       error: error.message || 'Failed to repurpose content',
-      model: 'meta-llama/llama-4-scout-17b-16e-instruct'
+      model: 'google/gemini-2.5-flash'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -12,9 +12,9 @@ serve(async (req) => {
   }
 
   try {
-    const apiKey = Deno.env.get('GROQ_GPT_OSS_20B_KEY');
+    const apiKey = Deno.env.get('LOVABLE_API_KEY');
     if (!apiKey) {
-      throw new Error('GROQ_GPT_OSS_20B_KEY not configured');
+      throw new Error('LOVABLE_API_KEY not configured');
     }
 
     const { 
@@ -27,39 +27,39 @@ serve(async (req) => {
 
     console.log('Auto-reply generation for platform:', platform);
 
-    const guardKey = Deno.env.get('GROQ_LLAMA_GUARD_KEY');
-    
-    // First check if the comment is safe to respond to
-    if (guardKey) {
-      const moderationResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${guardKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'llama-guard-3-8b',
-          messages: [
-            { role: 'user', content: `Check if this comment is safe: ${comment}` }
-          ],
-          temperature: 0.1,
-          max_tokens: 256,
-        }),
-      });
+    // Simple content safety check using the same model
+    const safetyResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { 
+            role: 'system', 
+            content: 'You are a content safety checker. Respond with only "safe" or "unsafe" based on whether the comment contains harmful, abusive, or inappropriate content.' 
+          },
+          { role: 'user', content: `Check this comment: ${comment}` }
+        ],
+        temperature: 0.1,
+        max_tokens: 10,
+      }),
+    });
 
-      if (moderationResponse.ok) {
-        const modResult = await moderationResponse.json();
-        const modContent = modResult.choices?.[0]?.message?.content || '';
-        if (modContent.toLowerCase().includes('unsafe')) {
-          return new Response(JSON.stringify({
-            reply: null,
-            flagged: true,
-            reason: 'Comment flagged as potentially unsafe',
-            model: 'llama-guard-3-8b'
-          }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        }
+    if (safetyResponse.ok) {
+      const safetyResult = await safetyResponse.json();
+      const safetyContent = safetyResult.choices?.[0]?.message?.content || '';
+      if (safetyContent.toLowerCase().includes('unsafe')) {
+        return new Response(JSON.stringify({
+          reply: null,
+          flagged: true,
+          reason: 'Comment flagged as potentially unsafe',
+          model: 'google/gemini-2.5-flash'
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
     }
 
@@ -99,14 +99,14 @@ Return JSON:
   "alternativeReplies": ["Alt 1", "Alt 2"]
 }`;
 
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-oss-20b',
+        model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
@@ -117,6 +117,16 @@ Return JSON:
     });
 
     if (!response.ok) {
+      const error = await response.text();
+      console.error('Reply API error:', error);
+      
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
       throw new Error(`Reply API error: ${response.status}`);
     }
 
@@ -140,7 +150,7 @@ Return JSON:
     return new Response(JSON.stringify({
       ...replyData,
       flagged: false,
-      model: 'gpt-oss-20b'
+      model: 'google/gemini-2.5-flash'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

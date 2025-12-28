@@ -40,11 +40,9 @@ serve(async (req) => {
 
     console.log('AI Accessibility called by user:', user.id);
 
-    const visionKey = Deno.env.get('GROQ_LLAMA4_SCOUT_KEY');
-    const reasoningKey = Deno.env.get('GROQ_GPT_OSS_120B_KEY');
-    
-    if (!visionKey || !reasoningKey) {
-      throw new Error('Required API keys not configured');
+    const apiKey = Deno.env.get('LOVABLE_API_KEY');
+    if (!apiKey) {
+      throw new Error('LOVABLE_API_KEY not configured');
     }
 
     const { imageBase64, imageUrl, platform } = await req.json();
@@ -56,14 +54,14 @@ serve(async (req) => {
       ? { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageBase64}` } }
       : { type: "image_url", image_url: { url: imageUrl } };
 
-    const visionResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const visionResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${visionKey}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        model: 'google/gemini-2.5-pro',
         messages: [{
           role: 'user',
           content: [
@@ -89,6 +87,16 @@ Be descriptive but concise.`
     });
 
     if (!visionResponse.ok) {
+      const error = await visionResponse.text();
+      console.error('Vision API error:', error);
+      
+      if (visionResponse.status === 429) {
+        return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
       throw new Error(`Vision API error: ${visionResponse.status}`);
     }
 
@@ -96,14 +104,14 @@ Be descriptive but concise.`
     const imageDescription = visionResult.choices?.[0]?.message?.content || '';
 
     // Step 2: Generate accessibility content
-    const accessibilityResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const accessibilityResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${reasoningKey}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-oss-120b',
+        model: 'google/gemini-2.5-flash',
         messages: [
           {
             role: 'system',
@@ -138,6 +146,8 @@ Generate JSON:
     });
 
     if (!accessibilityResponse.ok) {
+      const error = await accessibilityResponse.text();
+      console.error('Accessibility API error:', error);
       throw new Error(`Accessibility API error: ${accessibilityResponse.status}`);
     }
 
@@ -162,7 +172,7 @@ Generate JSON:
       ...accessibility,
       imageDescription,
       platform,
-      models: ['llama-4-scout', 'gpt-oss-120b']
+      models: ['google/gemini-2.5-pro', 'google/gemini-2.5-flash']
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
