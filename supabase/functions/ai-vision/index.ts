@@ -40,9 +40,9 @@ serve(async (req) => {
 
     console.log('AI Vision called by user:', user.id);
 
-    const apiKey = Deno.env.get('GROQ_LLAMA4_SCOUT_KEY');
+    const apiKey = Deno.env.get('LOVABLE_API_KEY');
     if (!apiKey) {
-      throw new Error('GROQ_LLAMA4_SCOUT_KEY not configured');
+      throw new Error('LOVABLE_API_KEY not configured');
     }
 
     const { imageBase64, imageUrl, prompt } = await req.json();
@@ -53,14 +53,15 @@ serve(async (req) => {
       ? { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageBase64}` } }
       : { type: "image_url", image_url: { url: imageUrl } };
 
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    // Use Gemini Pro for vision tasks as it supports multimodal
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        model: 'google/gemini-2.5-pro',
         messages: [
           {
             role: 'user',
@@ -78,6 +79,14 @@ serve(async (req) => {
     if (!response.ok) {
       const error = await response.text();
       console.error('Vision API error:', error);
+      
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
       throw new Error(`Vision API error: ${response.status}`);
     }
 
@@ -86,7 +95,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ 
       analysis: content,
-      model: 'llama-4-scout'
+      model: 'google/gemini-2.5-pro'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

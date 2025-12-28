@@ -19,9 +19,9 @@ serve(async (req) => {
   }
 
   try {
-    const apiKey = Deno.env.get('GROQ_GPT_OSS_120B_KEY');
+    const apiKey = Deno.env.get('LOVABLE_API_KEY');
     if (!apiKey) {
-      throw new Error('GROQ_GPT_OSS_120B_KEY not configured');
+      throw new Error('LOVABLE_API_KEY not configured');
     }
 
     const { content, sourceLanguage, targetLanguage, preserveTone, brandVoice } = await req.json();
@@ -49,14 +49,14 @@ serve(async (req) => {
       systemPrompt += `\n6. Match this brand voice style: ${brandVoice}`;
     }
 
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-oss-120b',
+        model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
           { 
@@ -75,6 +75,14 @@ ${content}`
     if (!response.ok) {
       const error = await response.text();
       console.error('Translation API error:', error);
+      
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
       throw new Error(`Translation API error: ${response.status}`);
     }
 
@@ -87,7 +95,7 @@ ${content}`
       translatedContent,
       sourceLanguage: sourceLanguage || 'auto',
       targetLanguage,
-      model: 'gpt-oss-120b'
+      model: 'google/gemini-2.5-flash'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

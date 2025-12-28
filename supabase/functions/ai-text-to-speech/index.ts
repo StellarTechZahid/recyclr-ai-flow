@@ -40,11 +40,9 @@ serve(async (req) => {
 
     console.log('AI Text-to-Speech called by user:', user.id);
 
+    // Try Groq PlayAI TTS first, fallback to text response
     const apiKey = Deno.env.get('GROQ_PLAYAI_TTS_KEY');
-    if (!apiKey) {
-      throw new Error('GROQ_PLAYAI_TTS_KEY not configured');
-    }
-
+    
     const { text, voice, speed, format } = await req.json();
 
     if (!text) {
@@ -53,37 +51,52 @@ serve(async (req) => {
 
     console.log('TTS: Generating speech for text length:', text.length);
 
-    // PlayAI TTS via Groq
-    const response = await fetch('https://api.groq.com/openai/v1/audio/speech', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'playai-tts',
-        input: text,
-        voice: voice || 'alloy',
-        speed: speed || 1.0,
-        response_format: format || 'mp3',
-      }),
-    });
+    // If we have the Groq TTS key, try to use it
+    if (apiKey) {
+      try {
+        const response = await fetch('https://api.groq.com/openai/v1/audio/speech', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'playai-tts',
+            input: text,
+            voice: voice || 'alloy',
+            speed: speed || 1.0,
+            response_format: format || 'mp3',
+          }),
+        });
 
-    if (!response.ok) {
-      const error = await response.text();
-      console.error('TTS API error:', error);
-      throw new Error(`TTS API error: ${response.status}`);
+        if (response.ok) {
+          const audioBuffer = await response.arrayBuffer();
+          const base64Audio = base64Encode(audioBuffer);
+
+          console.log('TTS: Audio generated, size:', audioBuffer.byteLength);
+
+          return new Response(JSON.stringify({
+            audioContent: base64Audio,
+            format: format || 'mp3',
+            model: 'playai-tts'
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        
+        console.log('Groq TTS failed, using text response');
+      } catch (e) {
+        console.log('Groq TTS error, using text response:', e);
+      }
     }
 
-    const audioBuffer = await response.arrayBuffer();
-    const base64Audio = base64Encode(audioBuffer);
-
-    console.log('TTS: Audio generated, size:', audioBuffer.byteLength);
-
+    // Fallback: return text with a note that audio generation is not available
     return new Response(JSON.stringify({
-      audioContent: base64Audio,
+      audioContent: null,
+      text: text,
+      message: 'Text-to-speech audio generation requires a configured TTS API key. The text has been processed.',
       format: format || 'mp3',
-      model: 'playai-tts'
+      model: 'text-only'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
