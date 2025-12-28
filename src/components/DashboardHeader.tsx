@@ -14,7 +14,10 @@ import {
   TrendingUp,
   Calendar,
   Users,
-  BarChart3
+  BarChart3,
+  Brain,
+  Wand2,
+  FileText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -79,6 +82,41 @@ const DashboardHeader = ({
             </Badge>
           </div>
 
+          {/* Main Navigation */}
+          <nav className="hidden md:flex items-center space-x-1">
+            <Link to="/dashboard">
+              <Button variant="ghost" size="sm" className="text-gray-600 hover:text-purple-600 hover:bg-purple-50">
+                <Grid3X3 className="w-4 h-4 mr-2" />
+                Dashboard
+              </Button>
+            </Link>
+            <Link to="/ai">
+              <Button variant="ghost" size="sm" className="text-gray-600 hover:text-purple-600 hover:bg-purple-50">
+                <Brain className="w-4 h-4 mr-2" />
+                AI Tools
+                <Badge className="ml-2 bg-red-500 text-white text-xs px-1.5 py-0">16</Badge>
+              </Button>
+            </Link>
+            <Link to="/repurpose">
+              <Button variant="ghost" size="sm" className="text-gray-600 hover:text-purple-600 hover:bg-purple-50">
+                <Wand2 className="w-4 h-4 mr-2" />
+                Repurpose
+              </Button>
+            </Link>
+            <Link to="/schedule">
+              <Button variant="ghost" size="sm" className="text-gray-600 hover:text-purple-600 hover:bg-purple-50">
+                <Calendar className="w-4 h-4 mr-2" />
+                Schedule
+              </Button>
+            </Link>
+            <Link to="/analytics">
+              <Button variant="ghost" size="sm" className="text-gray-600 hover:text-purple-600 hover:bg-purple-50">
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Analytics
+              </Button>
+            </Link>
+          </nav>
+
           {/* Search & View Controls */}
           <div className="flex items-center space-x-3 flex-1 max-w-2xl">
             <div className="relative flex-1 max-w-md">
@@ -136,14 +174,46 @@ const DashboardHeader = ({
               )}
             </Button>
 
-            {/* Mobile View Selector */}
+            {/* Mobile Navigation Menu */}
             <DropdownMenu>
-              <DropdownMenuTrigger asChild className="lg:hidden">
+              <DropdownMenuTrigger asChild className="md:hidden">
                 <Button variant="ghost" size="sm">
                   <Grid3X3 className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem asChild>
+                  <Link to="/dashboard" className="flex items-center">
+                    <Grid3X3 className="w-4 h-4 mr-2" />
+                    Dashboard
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/ai" className="flex items-center">
+                    <Brain className="w-4 h-4 mr-2" />
+                    AI Tools Hub
+                    <Badge className="ml-auto bg-red-500 text-white text-xs px-1.5 py-0">16</Badge>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/repurpose" className="flex items-center">
+                    <Wand2 className="w-4 h-4 mr-2" />
+                    Repurpose Content
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/schedule" className="flex items-center">
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Schedule Posts
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/analytics" className="flex items-center">
+                    <BarChart3 className="w-4 h-4 mr-2" />
+                    Analytics
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 {viewOptions.map((option) => {
                   const Icon = option.icon;
                   return (
@@ -153,7 +223,7 @@ const DashboardHeader = ({
                       className={selectedView === option.id ? 'bg-purple-50 text-purple-700' : ''}
                     >
                       <Icon className="w-4 h-4 mr-2" />
-                      {option.label}
+                      View: {option.label}
                     </DropdownMenuItem>
                   );
                 })}
