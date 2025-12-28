@@ -56,11 +56,27 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+
+    <script type="module">
+      // Dev-only: disable/unregister service worker + clear caches.
+      // This prevents cached bundles from causing invalid React hook calls.
+      window.__VITE_DEV__ = import.meta.env.DEV;
+
+      if (window.__VITE_DEV__ && "serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .getRegistrations()
+          .then((regs) => regs.forEach((r) => r.unregister()));
+
+        if ("caches" in window) {
+          caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
+        }
+      }
+    </script>
     
     <!-- PWA Features and Service Worker Registration -->
     <script>
-      // Register service worker
-      if ('serviceWorker' in navigator) {
+      // Register service worker (PROD only)
+      if ('serviceWorker' in navigator && !window.__VITE_DEV__) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js')
             .then((registration) => {
