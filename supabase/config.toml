@@ -56,3 +56,33 @@ verify_jwt = false
 
 [functions.ai-accessibility]
 verify_jwt = false
+
+[functions.ai-content-intent]
+verify_jwt = false
+
+[functions.ai-performance-reasoner]
+verify_jwt = false
+
+[functions.ai-content-decay]
+verify_jwt = false
+
+[functions.ai-quality-scorer]
+verify_jwt = false
+
+[functions.ai-strategic-planner]
+verify_jwt = false
+
+[functions.ai-format-generator]
+verify_jwt = false
+
+[functions.ai-tone-personality]
+verify_jwt = false
+
+[functions.ai-audience-writer]
+verify_jwt = false
+
+[functions.ai-hook-lab]
+verify_jwt = false
+
+[functions.ai-cta-optimizer]
+verify_jwt = false
