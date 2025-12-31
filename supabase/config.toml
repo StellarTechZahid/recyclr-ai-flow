@@ -86,3 +86,63 @@ verify_jwt = false
 
 [functions.ai-cta-optimizer]
 verify_jwt = false
+
+[functions.ai-autonomous-agent]
+verify_jwt = false
+
+[functions.ai-workflow-builder]
+verify_jwt = false
+
+[functions.ai-self-healing]
+verify_jwt = false
+
+[functions.ai-voice-to-content]
+verify_jwt = false
+
+[functions.ai-podcast-repurposer]
+verify_jwt = false
+
+[functions.ai-video-understanding]
+verify_jwt = false
+
+[functions.ai-screenshot-to-content]
+verify_jwt = false
+
+[functions.ai-carousel-intelligence]
+verify_jwt = false
+
+[functions.ai-cultural-localization]
+verify_jwt = false
+
+[functions.ai-region-optimizer]
+verify_jwt = false
+
+[functions.ai-global-brand-voice]
+verify_jwt = false
+
+[functions.ai-pre-publish-safety]
+verify_jwt = false
+
+[functions.ai-brand-guardrails]
+verify_jwt = false
+
+[functions.ai-engagement-reasoner]
+verify_jwt = false
+
+[functions.ai-predictive-scoring]
+verify_jwt = false
+
+[functions.ai-content-recommendations]
+verify_jwt = false
+
+[functions.ai-multi-brand]
+verify_jwt = false
+
+[functions.ai-content-knowledge-graph]
+verify_jwt = false
+
+[functions.ai-seasonal-intelligence]
+verify_jwt = false
+
+[functions.ai-content-memory]
+verify_jwt = false
