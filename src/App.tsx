@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { RouteRestorer } from "@/components/RouteRestorer";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/auth/Login";
@@ -44,6 +45,7 @@ const App = () => (
     <Sonner />
     <BrowserRouter>
       <AuthProvider>
+        <RouteRestorer>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth/login" element={<Login />} />
@@ -81,6 +83,7 @@ const App = () => (
           <Route path="/ai/reasoning" element={<ProtectedRoute><Reasoning /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </RouteRestorer>
       </AuthProvider>
     </BrowserRouter>
   </QueryClientProvider>
