@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,6 +13,29 @@ serve(async (req) => {
   }
 
   try {
+    // Authentication check
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const apiKey = Deno.env.get('LOVABLE_API_KEY');
     if (!apiKey) {
       throw new Error('LOVABLE_API_KEY not configured');
@@ -25,7 +49,7 @@ serve(async (req) => {
       count
     } = await req.json();
 
-    console.log('Viral hook generation for topic:', topic);
+    console.log('Viral hook generation for topic:', topic, 'user:', user.id);
 
     const systemPrompt = `You are a viral content expert who has analyzed millions of high-performing posts. You understand the psychology of why people click, engage, and share. Generate hooks that are proven to capture attention.`;
 
