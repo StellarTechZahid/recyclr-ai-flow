@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,6 +13,29 @@ serve(async (req) => {
   }
 
   try {
+    // Authentication check
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const apiKey = Deno.env.get('LOVABLE_API_KEY');
     if (!apiKey) {
       throw new Error('LOVABLE_API_KEY not configured');
@@ -23,7 +47,7 @@ serve(async (req) => {
       throw new Error('No content provided');
     }
 
-    console.log('Content moderation called, content length:', content.length);
+    console.log('Content moderation called, content length:', content.length, 'user:', user.id);
 
     const systemPrompt = checkBrandSafety 
       ? `You are a content safety and brand safety moderator. Analyze the following content for:
@@ -78,10 +102,8 @@ Respond with a JSON object:
     const result = await response.json();
     let analysis = result.choices?.[0]?.message?.content || '';
 
-    // Try to parse as JSON
     let parsed;
     try {
-      // Extract JSON from response if wrapped in text
       const jsonMatch = analysis.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         parsed = JSON.parse(jsonMatch[0]);
