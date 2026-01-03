@@ -36,6 +36,7 @@ import InfluencerMatcher from "./pages/ai/InfluencerMatcher";
 import ContentMonetizer from "./pages/ai/ContentMonetizer";
 import Accessibility from "./pages/ai/Accessibility";
 import Reasoning from "./pages/ai/Reasoning";
+import ToolRunner from "./pages/ai/ToolRunner";
 
 const queryClient = new QueryClient();
 
@@ -81,6 +82,8 @@ const App = () => (
           <Route path="/ai/monetize" element={<ProtectedRoute><ContentMonetizer /></ProtectedRoute>} />
           <Route path="/ai/accessibility" element={<ProtectedRoute><Accessibility /></ProtectedRoute>} />
           <Route path="/ai/reasoning" element={<ProtectedRoute><Reasoning /></ProtectedRoute>} />
+          {/* Generic runner for the rest of the AI tools */}
+          <Route path="/ai/:toolSlug" element={<ProtectedRoute><ToolRunner /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         </RouteRestorer>

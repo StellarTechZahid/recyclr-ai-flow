@@ -70,8 +70,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setLoading(false);
         
         // Navigate to dashboard after successful login
+        // (Avoid hijacking navigation when the user is already inside the app,
+        // e.g. when switching browser tabs and Supabase re-emits SIGNED_IN)
         if (event === 'SIGNED_IN' && session) {
-          navigate('/dashboard');
+          const path = window.location.pathname;
+          if (path === '/' || path.startsWith('/auth')) {
+            navigate('/dashboard');
+          }
         }
       }
     );

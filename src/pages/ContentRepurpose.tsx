@@ -127,39 +127,39 @@ const ContentRepurpose = () => {
     }
 
     setIsLoading(true);
-    try {
-      console.log('Starting repurpose with Groq Llama model...');
-      
-      const result = await repurposeContent({
-        content: selectedContent.original_content,
-        platform: selectedPlatform,
-        contentType: selectedContent.content_type,
-        tone: selectedTone,
-      });
+      try {
+        console.log('Starting repurpose with Gemini 2.5...');
+        
+        const result = await repurposeContent({
+          content: selectedContent.original_content,
+          platform: selectedPlatform,
+          contentType: selectedContent.content_type,
+          tone: selectedTone,
+        });
 
-      console.log('Repurpose result:', result);
-      
-      if (!result.repurposedContent) {
-        throw new Error('No repurposed content received from AI');
+        console.log('Repurpose result:', result);
+        
+        if (!result.repurposedContent) {
+          throw new Error('No repurposed content received from AI');
+        }
+        
+        setRepurposedContent(result.repurposedContent);
+        setSuggestions(result.suggestions || []);
+        
+        // Update URL with repurposed content
+        updateUrlParams({ repurposed: result.repurposedContent });
+        
+        // Save to database
+        const platform = platforms.find(p => p.id === selectedPlatform);
+        await saveRepurposedContent(result.repurposedContent, platform?.name || selectedPlatform);
+        
+        toast.success(`Content repurposed successfully using ${result.model || 'Gemini 2.5'}!`);
+      } catch (error: any) {
+        console.error('Repurpose error:', error);
+        toast.error(`Failed to repurpose content: ${error.message}`);
+      } finally {
+        setIsLoading(false);
       }
-      
-      setRepurposedContent(result.repurposedContent);
-      setSuggestions(result.suggestions || []);
-      
-      // Update URL with repurposed content
-      updateUrlParams({ repurposed: result.repurposedContent });
-      
-      // Save to database
-      const platform = platforms.find(p => p.id === selectedPlatform);
-      await saveRepurposedContent(result.repurposedContent, platform?.name || selectedPlatform);
-      
-      toast.success(`Content repurposed successfully using ${result.model || 'Groq Llama'}!`);
-    } catch (error: any) {
-      console.error('Repurpose error:', error);
-      toast.error(`Failed to repurpose content: ${error.message}`);
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   const saveRepurposedContent = async (content: string, platformName: string) => {
@@ -387,7 +387,7 @@ const ContentRepurpose = () => {
                   {isLoading ? (
                     <>
                       <Wand2 className="w-4 h-4 mr-2 animate-spin" />
-                      Repurposing with Groq Llama...
+                      Repurposing with Gemini 2.5...
                     </>
                   ) : (
                     <>
@@ -405,7 +405,7 @@ const ContentRepurpose = () => {
             <Card className="glass-card shadow-modern">
               <CardHeader>
                 <CardTitle className="text-primary">Repurposed Content</CardTitle>
-                <CardDescription>AI-generated content using Groq Llama model</CardDescription>
+                <CardDescription>AI-generated content using Gemini 2.5</CardDescription>
               </CardHeader>
               <CardContent>
                 {repurposedContent ? (

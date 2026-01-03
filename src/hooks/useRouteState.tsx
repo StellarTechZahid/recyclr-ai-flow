@@ -3,57 +3,50 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { usePersistentState } from './usePersistentState';
 
 interface RouteState {
-  lastRoute: string;
+  lastRoute: string; // stores pathname + search
   lastVisited: number;
   tabStates: Record<string, string>;
-  scrollPositions: Record<string, number>;
+  scrollPositions: Record<string, number>; // keyed by pathname
 }
 
 const defaultRouteState: RouteState = {
   lastRoute: '/dashboard',
   lastVisited: Date.now(),
   tabStates: {},
-  scrollPositions: {}
+  scrollPositions: {},
 };
 
 export function useRouteState() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [routeState, setRouteState] = usePersistentState<RouteState>(
-    'recyclr_route_state',
-    defaultRouteState
-  );
+  const [routeState, setRouteState] = usePersistentState<RouteState>('recyclr_route_state', defaultRouteState);
+
+  const routeKey = `${location.pathname}${location.search || ''}`;
 
   // Save current route whenever it changes
   useEffect(() => {
-    const currentPath = location.pathname;
-    
     // Don't save auth routes or root
-    if (currentPath.startsWith('/auth') || currentPath === '/') {
-      return;
-    }
+    if (location.pathname.startsWith('/auth') || location.pathname === '/') return;
 
-    setRouteState(prev => ({
+    setRouteState((prev) => ({
       ...prev,
-      lastRoute: currentPath,
-      lastVisited: Date.now()
+      lastRoute: routeKey,
+      lastVisited: Date.now(),
     }));
-  }, [location.pathname, setRouteState]);
+  }, [location.pathname, location.search, routeKey, setRouteState]);
 
-  // Save scroll position on scroll
+  // Save scroll position on scroll (store by pathname to avoid huge maps)
   useEffect(() => {
     const handleScroll = () => {
-      const currentPath = location.pathname;
-      if (currentPath.startsWith('/auth') || currentPath === '/') {
-        return;
-      }
+      if (location.pathname.startsWith('/auth') || location.pathname === '/') return;
 
-      setRouteState(prev => ({
+      const key = location.pathname;
+      setRouteState((prev) => ({
         ...prev,
         scrollPositions: {
           ...prev.scrollPositions,
-          [currentPath]: window.scrollY
-        }
+          [key]: window.scrollY,
+        },
       }));
     };
 
@@ -68,7 +61,7 @@ export function useRouteState() {
     const savedPosition = routeState.scrollPositions[location.pathname];
     if (savedPosition !== undefined) {
       setTimeout(() => {
-        window.scrollTo({ top: savedPosition, behavior: 'instant' });
+        window.scrollTo({ top: savedPosition, behavior: 'auto' });
       }, 100);
     }
   }, [location.pathname, routeState.scrollPositions]);
@@ -77,26 +70,25 @@ export function useRouteState() {
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        // User returned to tab - restore route if needed
         const currentPath = location.pathname;
         const savedRoute = routeState.lastRoute;
-        
-        // If we're on root and have a saved route, restore it
-        if (currentPath === '/' && savedRoute && savedRoute !== '/') {
+
+        // If we landed on root or dashboard and have a saved route, restore it
+        if ((currentPath === '/' || currentPath === '/dashboard') && savedRoute && savedRoute !== currentPath) {
           navigate(savedRoute, { replace: true });
         }
       } else {
         // User left tab - save current state
-        const currentPath = location.pathname;
-        if (!currentPath.startsWith('/auth') && currentPath !== '/') {
-          setRouteState(prev => ({
+        if (!location.pathname.startsWith('/auth') && location.pathname !== '/') {
+          const key = location.pathname;
+          setRouteState((prev) => ({
             ...prev,
-            lastRoute: currentPath,
+            lastRoute: routeKey,
             lastVisited: Date.now(),
             scrollPositions: {
               ...prev.scrollPositions,
-              [currentPath]: window.scrollY
-            }
+              [key]: window.scrollY,
+            },
           }));
         }
       }
@@ -104,42 +96,51 @@ export function useRouteState() {
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [location.pathname, routeState.lastRoute, navigate, setRouteState]);
+  }, [location.pathname, navigate, routeKey, routeState.lastRoute, setRouteState]);
 
   // Handle beforeunload - save state before closing
   useEffect(() => {
     const handleBeforeUnload = () => {
-      const currentPath = location.pathname;
-      if (!currentPath.startsWith('/auth') && currentPath !== '/') {
-        localStorage.setItem('recyclr_route_state', JSON.stringify({
-          ...routeState,
-          lastRoute: currentPath,
-          lastVisited: Date.now(),
-          scrollPositions: {
-            ...routeState.scrollPositions,
-            [currentPath]: window.scrollY
-          }
-        }));
+      if (!location.pathname.startsWith('/auth') && location.pathname !== '/') {
+        const key = location.pathname;
+        localStorage.setItem(
+          'recyclr_route_state',
+          JSON.stringify({
+            ...routeState,
+            lastRoute: routeKey,
+            lastVisited: Date.now(),
+            scrollPositions: {
+              ...routeState.scrollPositions,
+              [key]: window.scrollY,
+            },
+          })
+        );
       }
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [location.pathname, routeState]);
+  }, [location.pathname, routeKey, routeState]);
 
-  const saveTabState = useCallback((pageKey: string, tabValue: string) => {
-    setRouteState(prev => ({
-      ...prev,
-      tabStates: {
-        ...prev.tabStates,
-        [pageKey]: tabValue
-      }
-    }));
-  }, [setRouteState]);
+  const saveTabState = useCallback(
+    (pageKey: string, tabValue: string) => {
+      setRouteState((prev) => ({
+        ...prev,
+        tabStates: {
+          ...prev.tabStates,
+          [pageKey]: tabValue,
+        },
+      }));
+    },
+    [setRouteState]
+  );
 
-  const getTabState = useCallback((pageKey: string, defaultTab: string): string => {
-    return routeState.tabStates[pageKey] || defaultTab;
-  }, [routeState.tabStates]);
+  const getTabState = useCallback(
+    (pageKey: string, defaultTab: string): string => {
+      return routeState.tabStates[pageKey] || defaultTab;
+    },
+    [routeState.tabStates]
+  );
 
   const restoreRoute = useCallback(() => {
     if (routeState.lastRoute && routeState.lastRoute !== '/') {
@@ -154,7 +155,7 @@ export function useRouteState() {
     saveTabState,
     getTabState,
     restoreRoute,
-    lastRoute: routeState.lastRoute
+    lastRoute: routeState.lastRoute,
   };
 }
 
@@ -163,7 +164,7 @@ function throttle<T extends (...args: any[]) => any>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout | null = null;
+  let timeout: ReturnType<typeof setTimeout> | null = null;
   let previous = 0;
 
   return function executedFunction(...args: Parameters<T>) {
