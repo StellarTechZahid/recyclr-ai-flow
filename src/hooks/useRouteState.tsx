@@ -19,7 +19,7 @@ const defaultRouteState: RouteState = {
 export function useRouteState() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [routeState, setRouteState] = usePersistentState<RouteState>('recyclr_route_state', defaultRouteState);
+  const [routeState, setRouteState] = usePersistentState<RouteState>('vyralix_route_state', defaultRouteState);
 
   const routeKey = `${location.pathname}${location.search || ''}`;
 
@@ -104,7 +104,7 @@ export function useRouteState() {
       if (!location.pathname.startsWith('/auth') && location.pathname !== '/') {
         const key = location.pathname;
         localStorage.setItem(
-          'recyclr_route_state',
+          'vyralix_route_state',
           JSON.stringify({
             ...routeState,
             lastRoute: routeKey,

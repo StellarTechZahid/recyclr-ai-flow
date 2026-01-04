@@ -17,7 +17,7 @@ const Index = () => {
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
               <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-black bg-clip-text text-transparent">
-                RecyclrAI
+                Vyralix AI
               </span>
               <Badge className="hidden sm:block bg-purple-100 text-purple-800 border-purple-300">
                 Pro
@@ -114,7 +114,7 @@ const Index = () => {
                           <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-black rounded-lg flex items-center justify-center">
                             <Sparkles className="w-5 h-5 text-white" />
                           </div>
-                          <span className="font-bold text-lg bg-gradient-to-r from-purple-600 to-black bg-clip-text text-transparent">RecyclrAI</span>
+                          <span className="font-bold text-lg bg-gradient-to-r from-purple-600 to-black bg-clip-text text-transparent">Vyralix AI</span>
                         </div>
                         <Bell className="w-6 h-6 text-gray-400" />
                       </div>
@@ -291,7 +291,7 @@ const Index = () => {
             <Badge className="mb-6 bg-white/20 text-white border-white/30">
               See It In Action
             </Badge>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">Watch RecyclrAI Transform Content</h2>
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">Watch Vyralix AI Transform Content</h2>
             <p className="text-xl opacity-90 max-w-3xl mx-auto">
               See how one blog post becomes 20+ pieces of engaging content across all platforms
             </p>
@@ -344,7 +344,7 @@ const Index = () => {
                   </div>
                 </div>
                 <h3 className="text-2xl font-bold mb-4">3-Minute Demo</h3>
-                <p className="opacity-90 mb-6">Watch how RecyclrAI transforms one piece of content into dozens</p>
+                <p className="opacity-90 mb-6">Watch how Vyralix AI transforms one piece of content into dozens</p>
                 <Button className="bg-white text-purple-600 hover:bg-gray-100 font-bold px-8 py-3">
                   <Play className="w-5 h-5 mr-2" />
                   Watch Now
@@ -402,7 +402,7 @@ const Index = () => {
                 <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-white rounded-xl flex items-center justify-center">
                   <Sparkles className="w-6 h-6 text-purple-600" />
                 </div>
-                <span className="text-2xl font-bold">RecyclrAI</span>
+                <span className="text-2xl font-bold">Vyralix AI</span>
               </div>
               <p className="text-gray-300 leading-relaxed">
                 Transform your content into viral gold with the power of AI.
@@ -440,7 +440,7 @@ const Index = () => {
           
           <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 mb-4 md:mb-0">
-              &copy; 2024 RecyclrAI. All rights reserved.
+              &copy; 2024 Vyralix AI. All rights reserved.
             </p>
             <div className="flex space-x-6">
               {[Twitter, Instagram, Linkedin, Youtube].map((Icon, i) => (
