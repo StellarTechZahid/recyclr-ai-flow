@@ -37,11 +37,11 @@ interface DashboardStatsProps {
 const DashboardStats = ({ stats, loading }: DashboardStatsProps) => {
   if (loading) {
     return (
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6 md:mb-8">
         {[...Array(8)].map((_, i) => (
           <Card key={i} className="animate-pulse">
-            <CardContent className="p-4">
-              <div className="h-20 bg-gradient-to-r from-purple-200 to-gray-200 rounded-lg opacity-60"></div>
+            <CardContent className="p-3 sm:p-4">
+              <div className="h-16 sm:h-20 bg-gradient-to-r from-purple-200 to-gray-200 rounded-lg opacity-60"></div>
             </CardContent>
           </Card>
         ))}
@@ -133,19 +133,19 @@ const DashboardStats = ({ stats, loading }: DashboardStatsProps) => {
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6 md:mb-8">
       {statCards.map((stat, index) => {
         const Icon = stat.icon;
         return (
           <Card key={index} className="group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-0 overflow-hidden relative bg-white/80 backdrop-blur-sm">
             <div className={`absolute inset-0 ${stat.bgPattern} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
-            <CardContent className="p-4 relative z-10">
-              <div className="flex items-center justify-between mb-3">
-                <div className={`w-12 h-12 bg-gradient-to-br ${stat.gradient} rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                  <Icon className="w-6 h-6 text-white" />
+            <CardContent className="p-2.5 sm:p-3 md:p-4 relative z-10">
+              <div className="flex items-center justify-between mb-2 sm:mb-3 gap-1">
+                <div className={`w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-gradient-to-br ${stat.gradient} rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 flex-shrink-0`}>
+                  <Icon className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
                 </div>
                 <Badge 
-                  className={`text-xs px-2 py-1 ${
+                  className={`text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 hidden xs:inline-flex ${
                     stat.changeType === 'positive' 
                       ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
                       : stat.changeType === 'negative'
@@ -157,16 +157,16 @@ const DashboardStats = ({ stats, loading }: DashboardStatsProps) => {
                 </Badge>
               </div>
               
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                <p className="text-2xl font-bold text-gray-900 group-hover:text-purple-700 transition-colors">
+              <div className="space-y-0.5 sm:space-y-1">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">{stat.title}</p>
+                <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-900 group-hover:text-purple-700 transition-colors truncate">
                   {stat.value}
                 </p>
-                <p className="text-xs text-gray-500">{stat.subtitle}</p>
+                <p className="text-xs text-gray-500 truncate hidden sm:block">{stat.subtitle}</p>
               </div>
 
               {/* Mini progress indicator */}
-              <div className="mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="mt-2 sm:mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden sm:block">
                 <Progress 
                   value={Math.random() * 100} 
                   className="h-1"

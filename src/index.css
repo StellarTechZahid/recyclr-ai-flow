@@ -107,10 +107,31 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    -webkit-tap-highlight-color: transparent;
   }
 
   html {
     scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Touch-friendly tap targets */
+  button, 
+  [role="button"],
+  a,
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
+  }
+
+  /* Minimum touch target size */
+  @media (pointer: coarse) {
+    button:not(.btn-icon-only),
+    [role="button"]:not(.btn-icon-only) {
+      min-height: 44px;
+      min-width: 44px;
+    }
   }
 }
 
@@ -305,7 +326,32 @@
 }
 
 /* Responsive Design Enhancements */
-@media (max-width: 768px) {
+@media (max-width: 479px) {
+  .text-display {
+    @apply text-3xl;
+  }
+  
+  .text-headline {
+    @apply text-2xl;
+  }
+
+  .space-section {
+    @apply py-10;
+  }
+
+  .space-component {
+    @apply py-6;
+  }
+
+  /* Improve touch scrolling on mobile */
+  .overflow-auto,
+  .overflow-y-auto,
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (min-width: 480px) and (max-width: 767px) {
   .text-display {
     @apply text-4xl;
   }
@@ -315,11 +361,29 @@
   }
 
   .space-section {
-    @apply py-16;
+    @apply py-12;
   }
 
   .space-component {
     @apply py-8;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .text-display {
+    @apply text-5xl;
+  }
+  
+  .text-headline {
+    @apply text-4xl;
+  }
+
+  .space-section {
+    @apply py-16;
+  }
+
+  .space-component {
+    @apply py-10;
   }
 }
 

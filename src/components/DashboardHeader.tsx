@@ -61,75 +61,76 @@ const DashboardHeader = ({
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-purple-200/30 shadow-lg">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between gap-4">
+      <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-3 md:py-4">
+        <div className="flex items-center justify-between gap-2 sm:gap-4">
           {/* Logo & Brand */}
-          <div className="flex items-center space-x-3 min-w-0">
-            <Link to="/" className="flex items-center space-x-3 flex-shrink-0">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-black rounded-xl flex items-center justify-center shadow-lg">
-                <Sparkles className="w-6 h-6 text-white" />
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-shrink-0">
+            <Link to="/" className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-600 to-black rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg">
+                <Sparkles className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
               </div>
               <div className="hidden sm:block">
-                <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-black bg-clip-text text-transparent">
+                <span className="text-lg md:text-xl font-bold bg-gradient-to-r from-purple-600 to-black bg-clip-text text-transparent">
                   Vyralix AI
                 </span>
               </div>
             </Link>
-            <Badge className="hidden md:flex bg-purple-100 text-purple-700 border-purple-300">
+            <Badge className="hidden lg:flex bg-purple-100 text-purple-700 border-purple-300 text-xs">
               <Crown className="w-3 h-3 mr-1" />
               Pro
             </Badge>
           </div>
 
-          {/* Main Navigation */}
-          <nav className="hidden md:flex items-center space-x-1">
+          {/* Main Navigation - Hidden on mobile */}
+          <nav className="hidden lg:flex items-center gap-1">
             <Link to="/dashboard">
-              <Button variant="ghost" size="sm" className="text-gray-600 hover:text-purple-600 hover:bg-purple-50">
-                <Grid3X3 className="w-4 h-4 mr-2" />
+              <Button variant="ghost" size="sm" className="text-gray-600 hover:text-purple-600 hover:bg-purple-50 text-sm">
+                <Grid3X3 className="w-4 h-4 mr-1.5" />
                 Dashboard
               </Button>
             </Link>
             <Link to="/ai">
-              <Button variant="ghost" size="sm" className="text-gray-600 hover:text-purple-600 hover:bg-purple-50">
-                <Brain className="w-4 h-4 mr-2" />
+              <Button variant="ghost" size="sm" className="text-gray-600 hover:text-purple-600 hover:bg-purple-50 text-sm">
+                <Brain className="w-4 h-4 mr-1.5" />
                 AI Tools
-                <Badge className="ml-2 bg-red-500 text-white text-xs px-1.5 py-0">36</Badge>
+                <Badge className="ml-1.5 bg-red-500 text-white text-xs px-1.5 py-0">36</Badge>
               </Button>
             </Link>
             <Link to="/repurpose">
-              <Button variant="ghost" size="sm" className="text-gray-600 hover:text-purple-600 hover:bg-purple-50">
-                <Wand2 className="w-4 h-4 mr-2" />
+              <Button variant="ghost" size="sm" className="text-gray-600 hover:text-purple-600 hover:bg-purple-50 text-sm">
+                <Wand2 className="w-4 h-4 mr-1.5" />
                 Repurpose
               </Button>
             </Link>
             <Link to="/schedule">
-              <Button variant="ghost" size="sm" className="text-gray-600 hover:text-purple-600 hover:bg-purple-50">
-                <Calendar className="w-4 h-4 mr-2" />
+              <Button variant="ghost" size="sm" className="text-gray-600 hover:text-purple-600 hover:bg-purple-50 text-sm">
+                <Calendar className="w-4 h-4 mr-1.5" />
                 Schedule
               </Button>
             </Link>
             <Link to="/analytics">
-              <Button variant="ghost" size="sm" className="text-gray-600 hover:text-purple-600 hover:bg-purple-50">
-                <BarChart3 className="w-4 h-4 mr-2" />
+              <Button variant="ghost" size="sm" className="text-gray-600 hover:text-purple-600 hover:bg-purple-50 text-sm">
+                <BarChart3 className="w-4 h-4 mr-1.5" />
                 Analytics
               </Button>
             </Link>
           </nav>
 
           {/* Search & View Controls */}
-          <div className="flex items-center space-x-3 flex-1 max-w-2xl">
-            <div className="relative flex-1 max-w-md">
+          <div className="flex items-center gap-2 sm:gap-3 flex-1 max-w-xs sm:max-w-md lg:max-w-2xl justify-end">
+            {/* Search - Hidden on small mobile */}
+            <div className="hidden sm:block relative flex-1 max-w-xs md:max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
-                placeholder="Search content, analytics, schedules..."
+                placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="pl-10 border-purple-200 focus:border-purple-400 bg-white/80"
+                className="pl-9 pr-3 h-9 text-sm border-purple-200 focus:border-purple-400 bg-white/80"
               />
             </div>
 
-            {/* View Selector */}
-            <div className="hidden lg:flex items-center space-x-1 bg-purple-50/50 rounded-lg p-1">
+            {/* View Selector - Hidden on mobile/tablet */}
+            <div className="hidden xl:flex items-center gap-1 bg-purple-50/50 rounded-lg p-1">
               {viewOptions.map((option) => {
                 const Icon = option.icon;
                 return (
@@ -138,13 +139,13 @@ const DashboardHeader = ({
                     variant={selectedView === option.id ? "default" : "ghost"}
                     size="sm"
                     onClick={() => onViewChange(option.id)}
-                    className={`${
+                    className={`h-8 px-2.5 text-xs ${
                       selectedView === option.id 
                         ? 'bg-purple-600 text-white shadow-md' 
                         : 'text-gray-600 hover:text-purple-600 hover:bg-purple-100/50'
                     } transition-all duration-200`}
                   >
-                    <Icon className="w-4 h-4 mr-2" />
+                    <Icon className="w-3.5 h-3.5 mr-1.5" />
                     {option.label}
                   </Button>
                 );
@@ -153,30 +154,30 @@ const DashboardHeader = ({
           </div>
 
           {/* Actions */}
-          <div className="flex items-center space-x-2 flex-shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
             {/* Refresh Button */}
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={onRefresh}
               disabled={isRefreshing}
-              className="relative group"
+              className="relative group h-8 w-8 sm:h-9 sm:w-auto sm:px-3 p-0"
             >
               <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline ml-2">
+              <span className="hidden sm:inline ml-1.5 text-sm">
                 {isRefreshing ? 'Updating...' : 'Refresh'}
               </span>
               {lastUpdated && (
-                <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                  Last updated: {lastUpdated.toLocaleTimeString()}
+                <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+                  Last: {lastUpdated.toLocaleTimeString()}
                 </div>
               )}
             </Button>
 
             {/* Mobile Navigation Menu */}
             <DropdownMenu>
-              <DropdownMenuTrigger asChild className="md:hidden">
-                <Button variant="ghost" size="sm">
+              <DropdownMenuTrigger asChild className="lg:hidden">
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                   <Grid3X3 className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -213,6 +214,19 @@ const DashboardHeader = ({
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
+                {/* Mobile Search */}
+                <div className="px-2 py-1.5 sm:hidden">
+                  <div className="relative">
+                    <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                    <Input
+                      placeholder="Search..."
+                      value={searchQuery}
+                      onChange={(e) => onSearchChange(e.target.value)}
+                      className="pl-7 h-8 text-sm"
+                    />
+                  </div>
+                </div>
+                <DropdownMenuSeparator />
                 {viewOptions.map((option) => {
                   const Icon = option.icon;
                   return (
@@ -230,10 +244,10 @@ const DashboardHeader = ({
             </DropdownMenu>
 
             {/* Notifications */}
-            <Button variant="ghost" size="sm" className="relative">
+            <Button variant="ghost" size="sm" className="relative h-8 w-8 p-0">
               <Bell className="w-4 h-4" />
               {notificationCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 bg-red-500 text-white text-xs flex items-center justify-center rounded-full">
+                <Badge className="absolute -top-1 -right-1 w-4 h-4 p-0 bg-red-500 text-white text-xs flex items-center justify-center rounded-full">
                   {notificationCount}
                 </Badge>
               )}
@@ -242,11 +256,11 @@ const DashboardHeader = ({
             {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                <Button variant="ghost" size="sm" className="flex items-center gap-1.5 h-8 px-1.5 sm:px-2">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-semibold">
                     {user?.email?.charAt(0).toUpperCase() || 'U'}
                   </div>
-                  <span className="hidden md:inline font-medium">
+                  <span className="hidden md:inline font-medium text-sm max-w-24 truncate">
                     {user?.user_metadata?.full_name || user?.email?.split('@')[0]}
                   </span>
                 </Button>
