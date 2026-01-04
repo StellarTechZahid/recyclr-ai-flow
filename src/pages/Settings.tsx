@@ -46,36 +46,37 @@ const Settings = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Link to="/dashboard" className="flex items-center text-gray-600 hover:text-gray-900 transition-colors">
-              <ArrowLeft className="w-5 h-5 mr-2" />
-              Back to Dashboard
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+            <Link to="/dashboard" className="flex items-center text-gray-600 hover:text-gray-900 transition-colors text-sm sm:text-base">
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 flex-shrink-0" />
+              <span className="hidden xs:inline">Back to Dashboard</span>
+              <span className="xs:hidden">Back</span>
             </Link>
-            <h1 className="text-2xl font-bold brand-gradient-text">Settings</h1>
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold brand-gradient-text">Settings</h1>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <Tabs defaultValue="profile" className="space-y-8">
-          <TabsList className="grid grid-cols-2 lg:grid-cols-4 w-full">
-            <TabsTrigger value="profile" className="flex items-center space-x-2">
-              <User className="w-4 h-4" />
-              <span>Profile</span>
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8 max-w-4xl">
+        <Tabs defaultValue="profile" className="space-y-4 sm:space-y-6 md:space-y-8">
+          <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full h-auto gap-1 p-1">
+            <TabsTrigger value="profile" className="flex items-center justify-center gap-1 sm:gap-2 py-2 text-xs sm:text-sm">
+              <User className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline">Profile</span>
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex items-center space-x-2">
-              <Bell className="w-4 h-4" />
-              <span>Notifications</span>
+            <TabsTrigger value="notifications" className="flex items-center justify-center gap-1 sm:gap-2 py-2 text-xs sm:text-sm">
+              <Bell className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline">Alerts</span>
             </TabsTrigger>
-            <TabsTrigger value="billing" className="flex items-center space-x-2">
-              <CreditCard className="w-4 h-4" />
-              <span>Billing</span>
+            <TabsTrigger value="billing" className="flex items-center justify-center gap-1 sm:gap-2 py-2 text-xs sm:text-sm">
+              <CreditCard className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline">Billing</span>
             </TabsTrigger>
-            <TabsTrigger value="security" className="flex items-center space-x-2">
-              <Shield className="w-4 h-4" />
-              <span>Security</span>
+            <TabsTrigger value="security" className="flex items-center justify-center gap-1 sm:gap-2 py-2 text-xs sm:text-sm">
+              <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline">Security</span>
             </TabsTrigger>
           </TabsList>
 

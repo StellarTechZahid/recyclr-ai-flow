@@ -257,20 +257,23 @@ const ContentRepurpose = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-brand-purple/5">
-      <header className="bg-background/80 backdrop-blur-xl border-b border-border/50 shadow-modern">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Link to="/dashboard" className="flex items-center text-muted-foreground hover:text-primary transition-colors duration-200">
-              <ArrowLeft className="w-5 h-5 mr-2" />
-              Back to Dashboard
+      <header className="bg-background/80 backdrop-blur-xl border-b border-border/50 shadow-modern sticky top-0 z-50">
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+            <Link to="/dashboard" className="flex items-center text-muted-foreground hover:text-primary transition-colors duration-200 text-sm sm:text-base">
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 flex-shrink-0" />
+              <span className="hidden xs:inline">Back to Dashboard</span>
+              <span className="xs:hidden">Back</span>
             </Link>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary via-brand-cyan to-brand-emerald bg-clip-text text-transparent">AI Content Repurposing</h1>
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-primary via-brand-cyan to-brand-emerald bg-clip-text text-transparent">
+              AI Content Repurposing
+            </h1>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="grid lg:grid-cols-2 gap-8">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8 max-w-6xl">
+        <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
           {/* Input Section */}
           <div className="space-y-6">
             {availableContent.length === 0 && (

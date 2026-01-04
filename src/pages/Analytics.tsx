@@ -6,19 +6,20 @@ import AnalyticsDashboard from "@/components/AnalyticsDashboard";
 const Analytics = () => {
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Link to="/dashboard" className="flex items-center text-gray-600 hover:text-gray-900 transition-colors">
-              <ArrowLeft className="w-5 h-5 mr-2" />
-              Back to Dashboard
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+            <Link to="/dashboard" className="flex items-center text-gray-600 hover:text-gray-900 transition-colors text-sm sm:text-base">
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 flex-shrink-0" />
+              <span className="hidden xs:inline">Back to Dashboard</span>
+              <span className="xs:hidden">Back</span>
             </Link>
-            <h1 className="text-2xl font-bold brand-gradient-text">Analytics</h1>
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold brand-gradient-text">Analytics</h1>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8 max-w-7xl">
         <AnalyticsDashboard />
       </div>
     </div>
