@@ -20,7 +20,7 @@ export function RouteRestorer({ children }: { children: React.ReactNode }) {
     // (prevents wiping the current view when the user is already inside the app)
     if (user && (location.pathname === '/' || location.pathname === '/dashboard')) {
       try {
-        const savedState = localStorage.getItem('recyclr_route_state');
+        const savedState = localStorage.getItem('vyralix_route_state');
         if (savedState) {
           const parsed = JSON.parse(savedState);
           const lastRoute = parsed.lastRoute as string | undefined;

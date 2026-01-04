@@ -1,7 +1,7 @@
 
 {
-  "name": "Recyclr AI - AI-Powered Content Repurposing",
-  "short_name": "Recyclr AI",
+  "name": "Vyralix AI - AI-Powered Content Repurposing",
+  "short_name": "Vyralix AI",
   "description": "Transform your content into viral posts across all platforms with AI",
   "start_url": "/",
   "display": "standalone",
@@ -9,7 +9,7 @@
   "theme_color": "#3b82f6",
   "orientation": "portrait-primary",
   "scope": "/",
-  "id": "recyclr-ai-app",
+  "id": "vyralix-ai-app",
   "prefer_related_applications": false,
   "shortcuts": [
     {
@@ -103,7 +103,7 @@
   },
   "protocol_handlers": [
     {
-      "protocol": "web+recyclr",
+      "protocol": "web+vyralix",
       "url": "/dashboard/repurpose?url=%s"
     }
   ],
@@ -129,14 +129,14 @@
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Recyclr AI Dashboard"
+      "label": "Vyralix AI Dashboard"
     },
     {
       "src": "/screenshot-narrow.png",
       "sizes": "750x1334",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Recyclr AI Mobile View"
+      "label": "Vyralix AI Mobile View"
     }
   ]
 }

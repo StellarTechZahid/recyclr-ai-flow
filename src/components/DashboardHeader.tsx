@@ -71,7 +71,7 @@ const DashboardHeader = ({
               </div>
               <div className="hidden sm:block">
                 <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-black bg-clip-text text-transparent">
-                  RecyclrAI
+                  Vyralix AI
                 </span>
               </div>
             </Link>
@@ -93,7 +93,7 @@ const DashboardHeader = ({
               <Button variant="ghost" size="sm" className="text-gray-600 hover:text-purple-600 hover:bg-purple-50">
                 <Brain className="w-4 h-4 mr-2" />
                 AI Tools
-                <Badge className="ml-2 bg-red-500 text-white text-xs px-1.5 py-0">16</Badge>
+                <Badge className="ml-2 bg-red-500 text-white text-xs px-1.5 py-0">36</Badge>
               </Button>
             </Link>
             <Link to="/repurpose">
@@ -191,7 +191,7 @@ const DashboardHeader = ({
                   <Link to="/ai" className="flex items-center">
                     <Brain className="w-4 h-4 mr-2" />
                     AI Tools Hub
-                    <Badge className="ml-auto bg-red-500 text-white text-xs px-1.5 py-0">16</Badge>
+                    <Badge className="ml-auto bg-red-500 text-white text-xs px-1.5 py-0">36</Badge>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
