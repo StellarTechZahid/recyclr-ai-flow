@@ -35,25 +35,45 @@ export function useRouteState() {
     }));
   }, [location.pathname, location.search, routeKey, setRouteState]);
 
-  // Save scroll position on scroll (store by pathname to avoid huge maps)
+  // Save scroll position on scroll - optimized to prevent layout thrashing
   useEffect(() => {
+    if (location.pathname.startsWith('/auth') || location.pathname === '/') return;
+    
+    let scrollY = 0;
+    let ticking = false;
+    let saveTimeout: ReturnType<typeof setTimeout> | null = null;
+    
     const handleScroll = () => {
-      if (location.pathname.startsWith('/auth') || location.pathname === '/') return;
-
-      const key = location.pathname;
-      setRouteState((prev) => ({
-        ...prev,
-        scrollPositions: {
-          ...prev.scrollPositions,
-          [key]: window.scrollY,
-        },
-      }));
+      scrollY = window.scrollY;
+      
+      if (!ticking) {
+        // Use requestAnimationFrame to batch scroll updates
+        requestAnimationFrame(() => {
+          ticking = false;
+        });
+        ticking = true;
+      }
+      
+      // Debounce the state save to prevent excessive updates
+      if (saveTimeout) clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        const key = location.pathname;
+        setRouteState((prev) => ({
+          ...prev,
+          scrollPositions: {
+            ...prev.scrollPositions,
+            [key]: scrollY,
+          },
+        }));
+      }, 150);
     };
 
-    const throttledScroll = throttle(handleScroll, 500);
-    window.addEventListener('scroll', throttledScroll, { passive: true });
+    window.addEventListener('scroll', handleScroll, { passive: true });
 
-    return () => window.removeEventListener('scroll', throttledScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (saveTimeout) clearTimeout(saveTimeout);
+    };
   }, [location.pathname, setRouteState]);
 
   // Restore scroll position when route changes
