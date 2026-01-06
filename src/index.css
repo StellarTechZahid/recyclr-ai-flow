@@ -108,11 +108,26 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     -webkit-tap-highlight-color: transparent;
+    /* Improve scroll performance */
+    overscroll-behavior: none;
+  }
+  
+  /* Enable hardware acceleration for smooth scrolling */
+  main, 
+  .scroll-container {
+    will-change: scroll-position;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
   }
 
   html {
-    scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
+    /* Removed scroll-behavior: smooth to prevent scroll resistance */
+  }
+  
+  /* Only apply smooth scroll for anchor navigation, not general scrolling */
+  html:focus-within {
+    scroll-behavior: smooth;
   }
 
   /* Touch-friendly tap targets */
@@ -348,6 +363,13 @@
   .overflow-y-auto,
   .overflow-x-auto {
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  
+  /* Reduce heavy effects on mobile for better scroll performance */
+  .backdrop-blur-xl,
+  .backdrop-blur-md {
+    @apply backdrop-blur-sm;
   }
 }
 
