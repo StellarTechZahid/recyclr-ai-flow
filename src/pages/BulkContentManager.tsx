@@ -175,7 +175,7 @@ const BulkContentManager = () => {
           <div className="lg:col-span-1">
             <Card>
               <CardHeader>
-                <CardTitle>Bulk Repurpose Settings</CardTitle>
+                <CardTitle>Bulk Repurpose Setting</CardTitle>
                 <CardDescription>Select content and platforms for bulk processing</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
