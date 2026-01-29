@@ -176,7 +176,7 @@ const BulkContentManager = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Bulk Repurpose Setting</CardTitle>
-                <CardDescription>Select content and platforms for bulk processing</CardDescription>
+                <CardDescription>Select content and platform for bulk processing</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
