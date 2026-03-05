@@ -125,10 +125,11 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error in repurpose-content function:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to repurpose content';
     return new Response(JSON.stringify({ 
-      error: error.message || 'Failed to repurpose content',
+      error: errorMessage,
       model: 'google/gemini-2.5-flash'
     }), {
       status: 500,
