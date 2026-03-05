@@ -146,3 +146,6 @@ verify_jwt = false
 
 [functions.ai-content-memory]
 verify_jwt = false
+
+[functions.scrape-url]
+verify_jwt = false

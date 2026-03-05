@@ -99,13 +99,14 @@ serve(async (req) => {
           error: errorMessage
         });
 
-      } catch (error) {
-        logStep("Error processing post", { postId: post.id, error: error.message });
+      } catch (error: unknown) {
+        const errMsg = error instanceof Error ? error.message : String(error);
+        logStep("Error processing post", { postId: post.id, error: errMsg });
         results.push({
           id: post.id,
           platform: post.platform,
           success: false,
-          error: error.message
+          error: errMsg
         });
       }
     }
@@ -120,7 +121,7 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in schedule-posts", { message: errorMessage });
     

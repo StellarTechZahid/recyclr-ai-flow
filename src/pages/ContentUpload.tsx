@@ -1,12 +1,12 @@
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Upload, FileText, Link as LinkIcon, PenTool } from "lucide-react";
+import { ArrowLeft, Upload, FileText, Link as LinkIcon, PenTool, Loader2, CheckCircle, Globe } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +20,8 @@ const ContentUpload = () => {
   const [url, setUrl] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [extractionDone, setExtractionDone] = useState(false);
   const { user } = useAuth();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,6 +31,52 @@ const ContentUpload = () => {
       setTitle(selectedFile.name.replace(/\.[^/.]+$/, ""));
     }
   };
+
+  // Auto-extract content when URL is pasted
+  const extractFromUrl = useCallback(async (inputUrl: string) => {
+    if (!inputUrl.trim()) return;
+    
+    // Validate URL format
+    try {
+      new URL(inputUrl);
+    } catch {
+      return; // Not a valid URL yet
+    }
+
+    setIsExtracting(true);
+    setExtractionDone(false);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('scrape-url', {
+        body: { url: inputUrl.trim() },
+      });
+
+      if (error) throw error;
+
+      if (data?.title) setTitle(data.title);
+      if (data?.content) setContent(data.content);
+      if (!contentType) setContentType('article');
+      
+      setExtractionDone(true);
+      toast.success('Content extracted successfully from URL!');
+    } catch (error: unknown) {
+      console.error('URL extraction error:', error);
+      toast.error('Failed to extract content from URL. You can paste it manually.');
+    } finally {
+      setIsExtracting(false);
+    }
+  }, [contentType]);
+
+  // Debounced URL extraction
+  useEffect(() => {
+    if (uploadMethod !== 'url' || !url.trim()) return;
+    
+    const timer = setTimeout(() => {
+      extractFromUrl(url);
+    }, 800);
+    
+    return () => clearTimeout(timer);
+  }, [url, uploadMethod, extractFromUrl]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +101,6 @@ const ContentUpload = () => {
 
         fileUrl = uploadData.path;
 
-        // For text files, read content
         if (file.type.startsWith('text/')) {
           finalContent = await file.text();
         } else {
@@ -61,10 +108,8 @@ const ContentUpload = () => {
         }
       }
 
-      // Calculate word count
       const wordCount = finalContent.split(/\s+/).filter(word => word.length > 0).length;
 
-      // Save to database
       const { error } = await supabase
         .from('content')
         .insert({
@@ -82,16 +127,17 @@ const ContentUpload = () => {
 
       toast.success('Content uploaded successfully!');
       
-      // Reset form
       setTitle("");
       setContent("");
       setContentType("");
       setUrl("");
       setFile(null);
+      setExtractionDone(false);
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Upload error:', error);
-      toast.error(error.message || 'Failed to upload content');
+      const message = error instanceof Error ? error.message : 'Failed to upload content';
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -99,7 +145,7 @@ const ContentUpload = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b">
+      <header className="bg-white border-b sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Link to="/dashboard" className="flex items-center text-gray-600 hover:text-gray-900">
@@ -149,14 +195,50 @@ const ContentUpload = () => {
                 onClick={() => setUploadMethod('url')}
               >
                 <CardContent className="p-4 text-center">
-                  <LinkIcon className="w-8 h-8 mx-auto mb-2 text-blue-600" />
+                  <Globe className="w-8 h-8 mx-auto mb-2 text-blue-600" />
                   <h3 className="font-medium">From URL</h3>
-                  <p className="text-sm text-gray-600">Import from web link</p>
+                  <p className="text-sm text-gray-600">Auto-extract from web link</p>
                 </CardContent>
               </Card>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              {uploadMethod === 'url' && (
+                <div className="space-y-2">
+                  <Label htmlFor="url">Paste URL to auto-extract content</Label>
+                  <div className="relative">
+                    <Input
+                      id="url"
+                      type="url"
+                      placeholder="https://example.com/article"
+                      value={url}
+                      onChange={(e) => {
+                        setUrl(e.target.value);
+                        setExtractionDone(false);
+                      }}
+                      required
+                      className="pr-10"
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      {isExtracting && <Loader2 className="w-4 h-4 animate-spin text-blue-500" />}
+                      {extractionDone && <CheckCircle className="w-4 h-4 text-green-500" />}
+                    </div>
+                  </div>
+                  {isExtracting && (
+                    <p className="text-sm text-blue-600 flex items-center gap-1">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      Extracting content from URL...
+                    </p>
+                  )}
+                  {extractionDone && (
+                    <p className="text-sm text-green-600 flex items-center gap-1">
+                      <CheckCircle className="w-3 h-3" />
+                      Content extracted! Review and edit below before uploading.
+                    </p>
+                  )}
+                </div>
+              )}
+
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="title">Title</Label>
@@ -176,28 +258,16 @@ const ContentUpload = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="blog_post">Blog Post</SelectItem>
+                      <SelectItem value="article">Article</SelectItem>
                       <SelectItem value="document">Document</SelectItem>
                       <SelectItem value="social_post">Social Media Post</SelectItem>
                       <SelectItem value="video_script">Video Script</SelectItem>
+                      <SelectItem value="newsletter">Newsletter</SelectItem>
                       <SelectItem value="note">Note</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
-
-              {uploadMethod === 'text' && (
-                <div className="space-y-2">
-                  <Label htmlFor="content">Content</Label>
-                  <Textarea
-                    id="content"
-                    placeholder="Paste or type your content here..."
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    rows={10}
-                    required
-                  />
-                </div>
-              )}
 
               {uploadMethod === 'file' && (
                 <div className="space-y-2">
@@ -215,35 +285,34 @@ const ContentUpload = () => {
                 </div>
               )}
 
-              {uploadMethod === 'url' && (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="url">URL</Label>
-                    <Input
-                      id="url"
-                      type="url"
-                      placeholder="https://example.com/article"
-                      value={url}
-                      onChange={(e) => setUrl(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="content">Content Preview</Label>
-                    <Textarea
-                      id="content"
-                      placeholder="Content will be extracted from URL..."
-                      value={content}
-                      onChange={(e) => setContent(e.target.value)}
-                      rows={10}
-                      required
-                    />
-                  </div>
-                </>
-              )}
+              <div className="space-y-2">
+                <Label htmlFor="content">
+                  {uploadMethod === 'url' ? 'Extracted Content (editable)' : 'Content'}
+                </Label>
+                <Textarea
+                  id="content"
+                  placeholder={uploadMethod === 'url' ? "Content will be auto-extracted when you paste a URL above..." : "Paste or type your content here..."}
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  rows={10}
+                  required={uploadMethod !== 'file'}
+                />
+                {content && (
+                  <p className="text-xs text-gray-500">
+                    {content.split(/\s+/).filter(w => w.length > 0).length} words · {content.length} characters
+                  </p>
+                )}
+              </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Uploading..." : "Upload Content"}
+              <Button type="submit" className="w-full" disabled={isLoading || isExtracting}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  "Upload Content"
+                )}
               </Button>
             </form>
           </CardContent>

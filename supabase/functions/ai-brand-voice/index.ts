@@ -200,9 +200,9 @@ Match the brand voice exactly. Provide only the content, no explanations.`
 
     throw new Error('Invalid action. Use "analyze" or "generate"');
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Brand voice error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : String(error) }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

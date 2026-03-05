@@ -6,6 +6,7 @@ import ContentRecommendations from "@/components/ContentRecommendations";
 import { useDashboardState } from "@/hooks/useDashboardState";
 import { useRealAnalytics } from "@/hooks/useRealAnalytics";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,10 +34,21 @@ import {
   Clock,
   Filter,
   Grid3X3,
-  List
+  List,
+  Trash2
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+
+interface ContentItem {
+  id: string;
+  title: string;
+  content_type: string;
+  source_type: string;
+  created_at: string;
+  word_count: number | null;
+  original_content: string;
+}
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -50,7 +62,7 @@ const Dashboard = () => {
     refreshAnalytics 
   } = useRealAnalytics(dashboardState.timeRange);
   
-  const [recentContent, setRecentContent] = useState<any[]>([]);
+  const [recentContent, setRecentContent] = useState<ContentItem[]>([]);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -61,8 +73,38 @@ const Dashboard = () => {
   }, [user, isRestoring]);
 
   const loadDashboardData = async () => {
-    // This function now relies on useRealAnalytics hook for real data
-    console.log('Dashboard data loading handled by useRealAnalytics hook');
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from('content')
+        .select('id, title, content_type, source_type, created_at, word_count, original_content')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (error) throw error;
+      setRecentContent(data || []);
+    } catch (error) {
+      console.error('Error loading content:', error);
+    }
+  };
+
+  const handleDeleteContent = async (contentId: string) => {
+    if (!user) return;
+    try {
+      const { error } = await supabase
+        .from('content')
+        .delete()
+        .eq('id', contentId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      setRecentContent(prev => prev.filter(c => c.id !== contentId));
+      toast.success('Content deleted successfully');
+    } catch (error) {
+      console.error('Error deleting content:', error);
+      toast.error('Failed to delete content');
+    }
   };
 
   const handleRefresh = async () => {
@@ -118,6 +160,21 @@ const Dashboard = () => {
   const filteredContent = recentContent.filter(content =>
     content.title?.toLowerCase().includes(dashboardState.searchQuery.toLowerCase())
   );
+
+  const getContentTypeLabel = (type: string) => {
+    const map: Record<string, string> = {
+      blog_post: '📝 Blog',
+      article: '📰 Article',
+      social_media: '📱 Social',
+      social_post: '📱 Social',
+      video_script: '🎥 Video',
+      newsletter: '📧 Newsletter',
+      document: '📄 Doc',
+      note: '📋 Note',
+      other: '📄 Other',
+    };
+    return map[type] || '📄 Content';
+  };
 
   if (isRestoring) {
     return (
@@ -240,10 +297,48 @@ const Dashboard = () => {
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-3 sm:space-y-4 max-h-72 sm:max-h-96 overflow-y-auto">
-                  {filteredContent.map((content) => (
-                    <div key={content.id} className="group p-3 sm:p-4 bg-gradient-to-r from-purple-50/30 to-white rounded-lg sm:rounded-xl border border-purple-200/30 hover:shadow-lg transition-all">
-                      {/* Content item rendering */}
+                <div className="space-y-2 sm:space-y-3 max-h-72 sm:max-h-96 overflow-y-auto">
+                  {filteredContent.map((item) => (
+                    <div key={item.id} className="group p-3 sm:p-4 bg-gradient-to-r from-purple-50/30 to-white rounded-lg sm:rounded-xl border border-purple-200/30 hover:shadow-lg transition-all">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-sm sm:text-base text-gray-900 truncate">{item.title}</h4>
+                          <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
+                            {item.original_content?.substring(0, 120)}...
+                          </p>
+                          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                            <Badge variant="outline" className="text-xs py-0">
+                              {getContentTypeLabel(item.content_type)}
+                            </Badge>
+                            {item.word_count && (
+                              <span className="text-xs text-gray-400">{item.word_count} words</span>
+                            )}
+                            <span className="text-xs text-gray-400">
+                              {new Date(item.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-gray-400 hover:text-purple-600"
+                            asChild
+                          >
+                            <Link to={`/repurpose?contentId=${item.id}`}>
+                              <Wand2 className="w-3.5 h-3.5" />
+                            </Link>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-gray-400 hover:text-red-600"
+                            onClick={() => handleDeleteContent(item.id)}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
