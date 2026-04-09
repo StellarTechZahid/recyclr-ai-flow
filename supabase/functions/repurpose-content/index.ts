@@ -360,7 +360,7 @@ function generateSmartSuggestions(platform: string, contentType: string, tone: s
   };
 
   const platSuggs = platformSuggestions[platform] || [
-    'Test different posting times to find your audience's peak engagement windows',
+    "Test different posting times to find your audience's peak engagement windows",
     'Repurpose this content across 2-3 additional platforms for maximum reach',
     'A/B test different hooks to optimize click-through rate',
   ];
