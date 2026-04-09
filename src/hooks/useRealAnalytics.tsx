@@ -39,6 +39,18 @@ interface PlatformStats {
   color: string;
 }
 
+const PLATFORM_COLORS: Record<string, string> = {
+  twitter: '#1DA1F2',
+  linkedin: '#0077B5',
+  facebook: '#1877F2',
+  instagram: '#E4405F',
+  youtube: '#FF0000',
+  tiktok: '#000000',
+  threads: '#000000',
+  pinterest: '#E60023',
+  blog: '#FF6B35',
+};
+
 export function useRealAnalytics(timeRange: string = '30') {
   const { user } = useAuth();
   const [metrics, setMetrics] = useState<RealTimeMetrics | null>(null);
@@ -50,8 +62,6 @@ export function useRealAnalytics(timeRange: string = '30') {
   useEffect(() => {
     if (user) {
       loadRealAnalytics();
-      
-      // Set up real-time updates every 5 minutes
       const interval = setInterval(loadRealAnalytics, 5 * 60 * 1000);
       return () => clearInterval(interval);
     }
@@ -62,26 +72,22 @@ export function useRealAnalytics(timeRange: string = '30') {
 
     try {
       setLoading(true);
-      console.log('Loading real analytics data...');
 
       const daysAgo = Number(timeRange) || 30;
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - daysAgo);
 
-      // Load real analytics data
+      // Load real analytics data — no joins to avoid FK issues
       const { data: analyticsData, error: analyticsError } = await supabase
         .from('post_analytics')
-        .select(`
-          *,
-          scheduled_posts!inner(id, content, platform, status, created_at)
-        `)
+        .select('*')
         .eq('user_id', user.id)
         .gte('recorded_at', startDate.toISOString())
         .order('recorded_at', { ascending: false });
 
       if (analyticsError) throw analyticsError;
 
-      // Load scheduled posts for context
+      // Load scheduled posts
       const { data: scheduledPosts, error: postsError } = await supabase
         .from('scheduled_posts')
         .select('*')
@@ -91,10 +97,13 @@ export function useRealAnalytics(timeRange: string = '30') {
 
       if (postsError) throw postsError;
 
-      // Process real data
-      const processedMetrics = calculateRealMetrics(analyticsData || [], scheduledPosts || []);
-      const processedContent = processContentPerformance(analyticsData || [], scheduledPosts || []);
-      const processedPlatforms = calculatePlatformStats(analyticsData || [], scheduledPosts || []);
+      const analytics = analyticsData || [];
+      const posts = scheduledPosts || [];
+
+      // Calculate REAL metrics — zero when no data
+      const processedMetrics = calculateRealMetrics(analytics, posts, daysAgo);
+      const processedContent = processContentPerformance(analytics, posts);
+      const processedPlatforms = calculatePlatformStats(analytics, posts, daysAgo);
 
       setMetrics(processedMetrics);
       setTopContent(processedContent);
@@ -109,38 +118,39 @@ export function useRealAnalytics(timeRange: string = '30') {
     }
   };
 
-  const calculateRealMetrics = (analytics: any[], posts: any[]): RealTimeMetrics => {
+  const calculateRealMetrics = (analytics: any[], posts: any[], daysAgo: number): RealTimeMetrics => {
     const totalViews = analytics.reduce((sum, item) => sum + (Number(item.views) || 0), 0);
     const totalLikes = analytics.reduce((sum, item) => sum + (Number(item.likes) || 0), 0);
     const totalShares = analytics.reduce((sum, item) => sum + (Number(item.shares) || 0), 0);
     const totalComments = analytics.reduce((sum, item) => sum + (Number(item.comments) || 0), 0);
     const totalEngagement = totalLikes + totalShares + totalComments;
 
-    const avgEngagementRate = analytics.length > 0 
+    const avgEngagementRate = analytics.length > 0
       ? analytics.reduce((sum, item) => sum + (Number(item.engagement_rate) || 0), 0) / analytics.length
       : 0;
 
-    // Calculate platform distribution
+    // Calculate platform distribution from real posts
     const platformCounts = posts.reduce((acc, post) => {
       acc[post.platform] = (acc[post.platform] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
     const topPlatform = Object.entries(platformCounts)
-      .sort(([,a], [,b]) => (b as number) - (a as number))[0]?.[0] || 'twitter';
+      .sort(([, a], [, b]) => (b as number) - (a as number))[0]?.[0] || 'None';
 
-    // Calculate growth (compare with previous period)
-    const analyticsLength = analytics.length;
-    const midPoint = new Date();
-    midPoint.setDate(midPoint.getDate() - Math.floor(analyticsLength / 2));
-    
-    const recentData = analytics.filter(item => new Date(item.recorded_at) >= midPoint);
-    const olderData = analytics.filter(item => new Date(item.recorded_at) < midPoint);
-    
-    const recentEngagement = recentData.reduce((sum, item) => sum + (Number(item.engagement_rate) || 0), 0);
-    const olderEngagement = olderData.reduce((sum, item) => sum + (Number(item.engagement_rate) || 0), 0);
-    
-    const weeklyGrowth = olderEngagement > 0 
+    // Calculate REAL growth by comparing halves of the period
+    const midDate = new Date();
+    midDate.setDate(midDate.getDate() - Math.floor(daysAgo / 2));
+
+    const recentAnalytics = analytics.filter(item => new Date(item.recorded_at) >= midDate);
+    const olderAnalytics = analytics.filter(item => new Date(item.recorded_at) < midDate);
+
+    const recentEngagement = recentAnalytics.reduce((sum, item) =>
+      sum + (Number(item.likes) || 0) + (Number(item.shares) || 0) + (Number(item.comments) || 0), 0);
+    const olderEngagement = olderAnalytics.reduce((sum, item) =>
+      sum + (Number(item.likes) || 0) + (Number(item.shares) || 0) + (Number(item.comments) || 0), 0);
+
+    const weeklyGrowth = olderEngagement > 0
       ? Math.round(((recentEngagement - olderEngagement) / olderEngagement) * 100)
       : 0;
 
@@ -151,8 +161,8 @@ export function useRealAnalytics(timeRange: string = '30') {
       avgEngagementRate: Number(avgEngagementRate.toFixed(1)),
       topPlatform,
       weeklyGrowth,
-      monthlyActive: new Set(analytics.map(item => item.user_id)).size,
-      conversionRate: totalViews > 0 ? Number(((totalEngagement / totalViews) * 100).toFixed(1)) : 0
+      monthlyActive: posts.length > 0 ? 1 : 0, // The current user
+      conversionRate: totalViews > 0 ? Number(((totalEngagement / totalViews) * 100).toFixed(1)) : 0,
     };
   };
 
@@ -173,7 +183,7 @@ export function useRealAnalytics(timeRange: string = '30') {
 
       return {
         id: post.id,
-        title: post.content?.substring(0, 60) + '...' || 'Untitled Post',
+        title: (post.content?.substring(0, 60) || 'Untitled Post') + (post.content?.length > 60 ? '...' : ''),
         platform: post.platform,
         views,
         likes,
@@ -182,28 +192,37 @@ export function useRealAnalytics(timeRange: string = '30') {
         clicks,
         engagementRate,
         publishedAt: new Date(post.created_at),
-        performance
+        performance,
       };
     }).sort((a, b) => b.engagementRate - a.engagementRate);
   };
 
-  const calculatePlatformStats = (analytics: any[], posts: any[]): PlatformStats[] => {
-    const platforms = ['twitter', 'linkedin', 'facebook', 'instagram'];
-    const colors = ['#1DA1F2', '#0077B5', '#1877F2', '#E4405F'];
+  const calculatePlatformStats = (analytics: any[], posts: any[], daysAgo: number): PlatformStats[] => {
+    // Only include platforms that have real posts
+    const platformSet = new Set(posts.map(p => p.platform));
 
-    return platforms.map((platform, index) => {
+    return Array.from(platformSet).map((platform) => {
       const platformPosts = posts.filter(post => post.platform === platform);
-      const platformAnalytics = analytics.filter(item => 
+      const platformAnalytics = analytics.filter(item =>
         platformPosts.some(post => post.id === item.post_id)
       );
 
       const totalViews = platformAnalytics.reduce((sum, item) => sum + (Number(item.views) || 0), 0);
-      const totalEngagement = platformAnalytics.reduce((sum, item) => 
+      const totalEngagement = platformAnalytics.reduce((sum, item) =>
         sum + (Number(item.likes) || 0) + (Number(item.shares) || 0) + (Number(item.comments) || 0), 0
       );
       const avgEngagementRate = platformAnalytics.length > 0
         ? platformAnalytics.reduce((sum, item) => sum + (Number(item.engagement_rate) || 0), 0) / platformAnalytics.length
         : 0;
+
+      // Calculate real growth by comparing halves
+      const midDate = new Date();
+      midDate.setDate(midDate.getDate() - Math.floor(daysAgo / 2));
+      const recentPlatAnalytics = platformAnalytics.filter(a => new Date(a.recorded_at) >= midDate);
+      const olderPlatAnalytics = platformAnalytics.filter(a => new Date(a.recorded_at) < midDate);
+      const recentEng = recentPlatAnalytics.reduce((s, a) => s + (Number(a.likes) || 0) + (Number(a.shares) || 0) + (Number(a.comments) || 0), 0);
+      const olderEng = olderPlatAnalytics.reduce((s, a) => s + (Number(a.likes) || 0) + (Number(a.shares) || 0) + (Number(a.comments) || 0), 0);
+      const growth = olderEng > 0 ? Math.round(((recentEng - olderEng) / olderEng) * 100) : 0;
 
       return {
         platform,
@@ -211,8 +230,8 @@ export function useRealAnalytics(timeRange: string = '30') {
         totalViews,
         totalEngagement,
         avgEngagementRate: Number(avgEngagementRate.toFixed(1)),
-        growth: Math.floor(Math.random() * 25) + 5, // TODO: Calculate real growth
-        color: colors[index]
+        growth,
+        color: PLATFORM_COLORS[platform] || '#8b5cf6',
       };
     }).filter(stat => stat.posts > 0);
   };
@@ -223,6 +242,6 @@ export function useRealAnalytics(timeRange: string = '30') {
     platformStats,
     loading,
     lastUpdated,
-    refreshAnalytics: loadRealAnalytics
+    refreshAnalytics: loadRealAnalytics,
   };
 }
