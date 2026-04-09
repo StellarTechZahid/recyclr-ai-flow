@@ -324,7 +324,7 @@ function generateSmartSuggestions(platform: string, contentType: string, tone: s
     twitter: [
       'Pin the first tweet of your thread to your profile for maximum visibility',
       'Reply to your own thread with additional resources to boost engagement',
-      'Schedule this during peak hours: 8-10 AM or 6-9 PM in your audience's timezone',
+      "Schedule this during peak hours: 8-10 AM or 6-9 PM in your audience's timezone",
       'Quote-tweet your own thread 2-3 days later with a new angle to resurface it',
     ],
     linkedin: [
