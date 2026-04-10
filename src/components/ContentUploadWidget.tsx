@@ -57,7 +57,7 @@ const ContentUploadWidget = ({ onContentUploaded }: ContentUploadWidgetProps) =>
       }
     } catch (error: any) {
       console.error('Error uploading content:', error);
-      toast.error('Failed to upload content');
+      toast.error(error?.message || 'Failed to upload content');
     } finally {
       setIsUploading(false);
     }
