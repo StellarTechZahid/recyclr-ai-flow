@@ -65,7 +65,6 @@ const AITools = () => {
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8 max-w-7xl">
         {/* Hero */}
         <section className="text-center mb-6 sm:mb-8 md:mb-10">
-          <Badge className="mb-3 sm:mb-4 text-xs sm:text-sm">Powered by Gemini 2.5 (Lovable AI Gateway)</Badge>
           <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mb-2 sm:mb-3">
             AI-Powered Content Tools
           </h2>

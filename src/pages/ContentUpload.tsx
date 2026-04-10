@@ -10,6 +10,7 @@ import { ArrowLeft, Upload, FileText, Link as LinkIcon, PenTool, Loader2, CheckC
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { ensureUserProfileRecord } from "@/lib/ensureUserProfileRecord";
 import { toast } from "sonner";
 
 const ContentUpload = () => {
@@ -85,6 +86,8 @@ const ContentUpload = () => {
     setIsLoading(true);
 
     try {
+      await ensureUserProfileRecord(user);
+
       let finalContent = content;
       let fileUrl = null;
 
@@ -136,7 +139,9 @@ const ContentUpload = () => {
       
     } catch (error: unknown) {
       console.error('Upload error:', error);
-      const message = error instanceof Error ? error.message : 'Failed to upload content';
+      const message = typeof error === 'object' && error && 'message' in error
+        ? String(error.message)
+        : 'Failed to upload content';
       toast.error(message);
     } finally {
       setIsLoading(false);
