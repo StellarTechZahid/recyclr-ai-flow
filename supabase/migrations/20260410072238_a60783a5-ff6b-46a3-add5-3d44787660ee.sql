@@ -1,0 +1,2 @@
+ALTER TABLE public.content DROP CONSTRAINT content_content_type_check;
+ALTER TABLE public.content ADD CONSTRAINT content_content_type_check CHECK (content_type = ANY (ARRAY['document','blog_post','social_post','social_media','video_script','note','article','newsletter','presentation','other']));
