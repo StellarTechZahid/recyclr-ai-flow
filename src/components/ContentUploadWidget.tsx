@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Upload, FileText } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { ensureUserProfileRecord } from "@/lib/ensureUserProfileRecord";
 import { toast } from "sonner";
 
 interface ContentUploadWidgetProps {
@@ -35,6 +36,8 @@ const ContentUploadWidget = ({ onContentUploaded }: ContentUploadWidgetProps) =>
 
     setIsUploading(true);
     try {
+      await ensureUserProfileRecord(user);
+
       const { error } = await supabase
         .from('content')
         .insert({
@@ -55,9 +58,12 @@ const ContentUploadWidget = ({ onContentUploaded }: ContentUploadWidgetProps) =>
       if (onContentUploaded) {
         onContentUploaded();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error uploading content:', error);
-      toast.error(error?.message || 'Failed to upload content');
+      const message = typeof error === 'object' && error && 'message' in error
+        ? String(error.message)
+        : 'Failed to upload content';
+      toast.error(message);
     } finally {
       setIsUploading(false);
     }
